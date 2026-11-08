@@ -1,5 +1,10 @@
 // Comprehensive In-Memory Campus Database & Explainable Matching Engine for KhojSetu on Vercel
-import { v4 as uuidv4 } from 'uuid';
+function uuidv4(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return Math.random().toString(36).substring(2, 10) + '-' + Math.random().toString(36).substring(2, 6);
+}
 
 export interface User {
   id: string;
