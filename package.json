@@ -1,0 +1,35 @@
+{
+  "name": "khojsetu-monorepo",
+  "version": "2.0.0",
+  "private": true,
+  "description": "KhojSetu (FoundBeacon): Full-Stack TypeScript Lost & Found with Next.js, NestJS, Prisma, BullMQ, PostGIS, and OpenTelemetry",
+  "workspaces": [
+    "apps/*",
+    "e2e"
+  ],
+  "scripts": {
+    "dev:api": "npm --prefix apps/api run start:dev",
+    "dev:web": "npm --prefix apps/web run dev",
+    "build:api": "npm --prefix apps/api run build",
+    "build:web": "npm --prefix apps/web run build",
+    "prisma:generate": "npm --prefix apps/api run prisma:generate",
+    "prisma:seed": "npm --prefix apps/api run prisma:seed",
+    "test:e2e": "npm --prefix e2e test",
+    "test:api": "npm --prefix apps/api test"
+  },
+  "keywords": [
+    "typescript",
+    "nextjs",
+    "nestjs",
+    "postgresql",
+    "prisma",
+    "bullmq",
+    "redis",
+    "postgis",
+    "pgvector",
+    "opentelemetry",
+    "playwright"
+  ],
+  "author": "Google Deepmind Pair Programming",
+  "license": "MIT"
+}
