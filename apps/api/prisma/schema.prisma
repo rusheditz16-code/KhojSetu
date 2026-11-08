@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(uuid())
+  name          String
+  email         String         @unique
+  role          String         @default("STUDENT") // STUDENT, MODERATOR, ADMIN
+  studentId     String?
+  phoneContact  String?
+  createdAt     DateTime       @default(now())
+  
+  items         Item[]
+  claims        Claim[]
+  notifications Notification[]
+  auditLogs     AuditLog[]
+
+  @@map("users")
+}
+
+model Item {
+  id                      String   @id @default(uuid())
+  type                    String   // LOST, FOUND
+  title                   String
+  category                String   // electronics, id_cards, wallets_bags, keys, clothing, books, bottles, other
+  description             String
+  campusArea              String
+  zone                    String   // library, eng_block, science_block, cafeteria, sports_complex, hostels, etc.
+  latitude                Float?   // Rounded to 3 decimals (~100m) for PostGIS privacy compliance
+  longitude               Float?   // Rounded to 3 decimals (~100m) for PostGIS privacy compliance
+  incidentDate            DateTime
+  photoUrl                String?
+  photoKey                String?  // S3 object key
+  secretPrompt            String?  // Secret question to challenge claimants
+  status                  String   @default("OPEN") // OPEN, CLAIM_PENDING, RETURNED, CLOSED
+  userId                  String
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isFlagged               Boolean  @default(false)
+  flagReason              String?
+  vectorEmbedding         String?  // pgvector serialized representation
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  claims                  Claim[]
+
+  @@index([type])
+  @@index([category])
+  @@index([status])
+  @@index([zone])
+  @@map("items")
+}
+
+model Claim {
+  id                    String   @id @default(uuid())
+  itemId                String
+  item                  Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  claimantId            String
+  claimant              User     @relation(fields: [claimantId], references: [id], onDelete: Cascade)
+  privateProofDetail    String   // STRICT PRIVACY SHIELD: Hidden from public API
+  privateProofPhotoUrl  String?
+  status                String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  reviewerNotes         String?
+  pickupInstructions    String?  // Disclosed upon approval
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([itemId])
+  @@index([claimantId])
+  @@map("claims")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // MATCH_FOUND, CLAIM_SUBMITTED, CLAIM_APPROVED, CLAIM_REJECTED
+  title     String
+  message   String
+  linkUrl   String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String
+  actor      User     @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  actorRole  String
+  action     String   // ITEM_CREATED, CLAIM_APPROVED, FLAG_RESOLVED, ITEM_RETURNED
+  targetType String   // item, claim, user
+  targetId   String
+  details    String?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId])
+  @@map("audit_logs")
+}
