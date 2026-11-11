@@ -10,6 +10,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@auth0/nextjs-auth0": "^4.33.0",
     "clsx": "^2.1.1",
     "lucide-react": "^0.475.0",
     "next": "^14.2.24",

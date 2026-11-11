@@ -5,6 +5,7 @@ import DashboardHeader from '../components/DashboardHeader';
 import GoogleSignInModal from '../components/GoogleSignInModal';
 import { AuthProvider } from '../context/AuthContext';
 import { NotificationProvider } from '../context/NotificationContext';
+import { Auth0Provider } from '@auth0/nextjs-auth0/client';
 import { Shield, Sparkles } from 'lucide-react';
 
 export const metadata = {
@@ -18,12 +19,9 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <head>
-        {/* Official Google Identity Services SDK for Real One-Tap & Popup Sign-In */}
-        <script src="https://accounts.google.com/gsi/client" async defer></script>
-      </head>
       <body className="bg-[#F7F7F7] text-foundry-900 antialiased min-h-screen flex flex-col items-center justify-start selection:bg-foundry-900 selection:text-white">
-        <AuthProvider>
+        <Auth0Provider>
+          <AuthProvider>
           <NotificationProvider>
             {/* Foundry Top Announcement Bar */}
             <div className="w-full bg-foundry-900 text-white text-[10px] sm:text-[11px] font-medium tracking-tracked uppercase py-2 px-4 flex items-center justify-between border-b border-foundry-800 z-50">
@@ -98,6 +96,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <GoogleSignInModal />
           </NotificationProvider>
         </AuthProvider>
+        </Auth0Provider>
       </body>
     </html>
   );

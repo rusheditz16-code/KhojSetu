@@ -1,6 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { useUser } from '@auth0/nextjs-auth0/client';
 import { apiRequest, getActiveUserId, setActiveUserId } from '../lib/api';
 
 export interface User {
@@ -11,6 +12,7 @@ export interface User {
   studentId?: string;
   phoneContact?: string;
   avatarUrl?: string;
+  authProvider?: 'auth0' | 'email' | 'google';
 }
 
 interface AuthContextType {
@@ -32,20 +34,45 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({} as any);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const { user: auth0User, isLoading: isAuth0Loading } = useUser();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin');
 
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
+    if (isAuth0Loading) return;
+
     try {
       setIsLoading(true);
 
+      // Priority 1: Authoritative Auth0 / Google OAuth HTTP-only session
+      if (auth0User?.email) {
+        const sessionData = await apiRequest<{ authenticated: boolean; user: User | null }>(
+          '/auth/session'
+        ).catch(() => ({ authenticated: false, user: null }));
+
+        if (sessionData?.authenticated && sessionData.user) {
+          const syncedUser: User = { ...sessionData.user, authProvider: 'auth0' };
+          setCurrentUser(syncedUser);
+          setActiveUserId(syncedUser.id);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('khojsetu_google_user', JSON.stringify(syncedUser));
+          }
+          setIsLoginModalOpen(false);
+          return;
+        }
+      }
+
+      // Priority 2: Local fallback session (email signup/signin only)
       const savedStoredUser = typeof window !== 'undefined' ? localStorage.getItem('khojsetu_google_user') : null;
       if (savedStoredUser) {
         try {
           const parsed = JSON.parse(savedStoredUser);
-          if (parsed && parsed.id) {
+          if (parsed?.authProvider === 'auth0' && !auth0User) {
+            localStorage.removeItem('khojsetu_google_user');
+            localStorage.removeItem('khojsetu_user_id');
+          } else if (parsed && parsed.id) {
             setCurrentUser(parsed);
             setActiveUserId(parsed.id);
             return;
@@ -74,11 +101,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [auth0User, isAuth0Loading]);
 
   useEffect(() => {
     fetchProfile();
-  }, []);
+  }, [fetchProfile]);
 
   const loginWithGoogle = async (data: { email?: string; name?: string; credential?: string; avatarUrl?: string }) => {
     try {
@@ -126,12 +153,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
+    const isAuth0Session = Boolean(auth0User) || currentUser?.authProvider === 'auth0';
     if (typeof window !== 'undefined') {
       localStorage.removeItem('khojsetu_google_user');
       localStorage.removeItem('khojsetu_user_id');
     }
     setActiveUserId('');
     setCurrentUser(null);
+    if (isAuth0Session && typeof window !== 'undefined') {
+      window.location.href = '/auth/logout';
+    }
   };
 
   const openLoginModal = (mode?: any) => {
