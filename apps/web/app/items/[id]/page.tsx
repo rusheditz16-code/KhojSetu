@@ -82,7 +82,7 @@ export default function ItemDetailsPage() {
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('Delete this post?')) return;
+    if (!window.confirm('Delete this archive post?')) return;
     try {
       await apiRequest(`/items/${id}`, { method: 'DELETE' });
       router.push('/');
@@ -94,8 +94,8 @@ export default function ItemDetailsPage() {
   if (loading) {
     return (
       <div className="py-24 text-center space-y-3">
-        <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        <p className="text-xs text-slate-500 font-medium">Retrieving item details from NestJS API...</p>
+        <div className="w-7 h-7 border-2 border-foundry-900 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <p className="text-xs uppercase tracking-wider text-neutral-400">Retrieving exhibit from archive...</p>
       </div>
     );
   }
@@ -103,9 +103,9 @@ export default function ItemDetailsPage() {
   if (error || !item) {
     return (
       <div className="max-w-md mx-auto py-12 text-center space-y-3">
-        <div className="p-4 bg-red-50 text-red-700 rounded-2xl text-xs">{error || 'Item not found'}</div>
-        <Link href="/" className="inline-block px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200">
-          Back to Browse Feed
+        <div className="p-4 bg-rose-50 text-rose-700 rounded-xl text-xs">{error || 'Exhibit not found'}</div>
+        <Link href="/" className="foundry-pill-outline inline-block px-5 py-2">
+          Return to Catalog
         </Link>
       </div>
     );
@@ -116,13 +116,13 @@ export default function ItemDetailsPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pb-2 border-b border-neutral-200">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900"
+          className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider font-semibold text-neutral-500 hover:text-foundry-900 transition"
         >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to Feed</span>
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Back to Catalog</span>
         </Link>
 
         <div className="flex items-center gap-2">
@@ -130,10 +130,10 @@ export default function ItemDetailsPage() {
             <button
               type="button"
               onClick={() => setShowFlag(true)}
-              className="text-xs text-slate-500 hover:text-amber-600 flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-amber-50"
+              className="text-[11px] uppercase tracking-wider font-semibold text-neutral-500 hover:text-amber-700 flex items-center gap-1 px-3 py-1 rounded-full border border-neutral-200 hover:bg-neutral-50 transition"
             >
-              <ShieldAlert className="w-3.5 h-3.5 text-amber-500" />
-              <span>Flag Post</span>
+              <ShieldAlert className="w-3 h-3 text-amber-600" />
+              <span>Flag</span>
             </button>
           )}
 
@@ -141,204 +141,201 @@ export default function ItemDetailsPage() {
             <button
               type="button"
               onClick={handleDelete}
-              className="text-xs text-slate-500 hover:text-red-600 flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-red-50"
+              className="text-[11px] uppercase tracking-wider font-semibold text-neutral-500 hover:text-rose-700 flex items-center gap-1 px-3 py-1 rounded-full border border-neutral-200 hover:bg-neutral-50 transition"
             >
-              <Trash2 className="w-3.5 h-3.5 text-red-500" />
+              <Trash2 className="w-3 h-3 text-rose-600" />
               <span>Delete</span>
             </button>
           )}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Details */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-md overflow-hidden">
-            <div className="relative aspect-16/9 bg-slate-100">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Exhibition Art Frame (Left 7 Cols) */}
+        <div className="lg:col-span-7 space-y-6">
+          <div className="foundry-card rounded-xl p-4 sm:p-6 shadow-foundry-frame">
+            <div className="relative aspect-4/3 foundry-matting rounded-lg overflow-hidden flex items-center justify-center p-4">
               {item.photoUrl ? (
-                <img src={item.photoUrl} alt={item.title} className="w-full h-full object-cover" />
+                <img src={item.photoUrl} alt={item.title} className="w-full h-full object-cover rounded shadow-2xs" />
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-slate-400">
-                  <span className="text-4xl mb-2">{item.type === 'LOST' ? '🔍' : '📍'}</span>
-                  <span className="text-xs font-medium text-slate-500">No photo uploaded</span>
+                <div className="w-full h-full flex flex-col items-center justify-center bg-white rounded border border-neutral-200 text-neutral-400">
+                  <span className="text-4xl mb-2">{item.type === 'LOST' ? '🔍' : '📦'}</span>
+                  <span className="text-[10px] uppercase tracking-widest font-semibold text-neutral-400">
+                    {item.type === 'LOST' ? 'Lost Item Record' : 'Found Item Record'}
+                  </span>
                 </div>
               )}
 
               <div className="absolute top-4 left-4 flex items-center gap-2">
                 <span
-                  className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider text-white ${
-                    item.type === 'LOST' ? 'bg-rose-600' : 'bg-emerald-600'
+                  className={`px-3 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-widest shadow-xs ${
+                    item.type === 'LOST'
+                      ? 'bg-white text-rose-700 border border-rose-200'
+                      : 'bg-foundry-900 text-white'
                   }`}
                 >
                   {item.type}
                 </span>
 
                 <span
-                  className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider text-white ${
-                    item.status === 'RETURNED'
-                      ? 'bg-purple-600'
-                      : item.status === 'CLAIM_PENDING'
-                      ? 'bg-amber-500'
-                      : 'bg-blue-600'
-                  }`}
+                  className="bg-white/95 backdrop-blur-xs text-foundry-900 px-3 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider border border-neutral-200"
                 >
                   {item.status}
                 </span>
               </div>
             </div>
 
-            <div className="p-6 sm:p-8 space-y-6">
-              <div>
-                <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">
-                  {getCategoryLabel(item.category)}
-                </span>
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">{item.title}</h1>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-200/60 text-xs">
-                <div className="flex items-start gap-2.5">
-                  <MapPin className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-semibold text-slate-700 block">Campus Area</span>
-                    <span className="text-slate-900 font-bold">{item.campusArea}</span>
-                    <span className="text-[11px] text-slate-400 block mt-0.5">
-                      Zone: {getZoneLabel(item.zone)} • Lat: {item.latitude}, Lng: {item.longitude}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-2.5">
-                  <Calendar className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-semibold text-slate-700 block">Incident Date</span>
-                    <span className="text-slate-900 font-bold">
-                      {new Date(item.incidentDate).toLocaleString(undefined, {
-                        dateStyle: 'medium',
-                        timeStyle: 'short',
-                      })}
-                    </span>
-                    <span className="text-[11px] text-slate-400 block mt-0.5">Reported {formatTimeAgo(item.createdAt)}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Public Description</h3>
-                <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">{item.description}</p>
-              </div>
+            {/* Public Description */}
+            <div className="mt-6 space-y-4">
+              <span className="editorial-kicker">Public Dossier Description</span>
+              <p className="text-xs sm:text-sm text-neutral-700 leading-relaxed font-normal whitespace-pre-line">
+                {item.description}
+              </p>
 
               {item.secretPrompt && (
-                <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs space-y-1">
-                  <div className="flex items-center gap-1.5 font-bold text-amber-900 uppercase tracking-wider text-[11px]">
-                    <Lock className="w-3.5 h-3.5 text-amber-600" />
+                <div className="p-4 rounded-lg bg-neutral-50 border border-neutral-200 text-xs space-y-1">
+                  <div className="flex items-center gap-1.5 font-semibold text-foundry-900 uppercase tracking-widest text-[10px]">
+                    <Lock className="w-3.5 h-3.5 text-khoj-orange" />
                     <span>Private Verification Question Required by Reporter</span>
                   </div>
-                  <p className="text-amber-950 font-semibold italic text-sm">"{item.secretPrompt}"</p>
-                  <p className="text-[11px] text-amber-800">
-                    Claimants must submit their proof privately.
+                  <p className="text-foundry-950 font-serif italic text-sm pt-1">
+                    &quot;{item.secretPrompt}&quot;
+                  </p>
+                  <p className="text-[11px] text-neutral-500 font-light">
+                    Claimants must submit their proof answer privately. It will not be exposed to the public.
                   </p>
                 </div>
               )}
-
-              <div className="pt-2 flex flex-wrap items-center gap-3">
-                {!isOwner && item.status === 'OPEN' && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!isAuthenticated) {
-                        openLoginModal();
-                      } else {
-                        setShowClaim(true);
-                      }
-                    }}
-                    className="flex-1 py-3 px-4 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-500/20 flex items-center justify-center gap-2"
-                  >
-                    <Lock className="w-4 h-4" />
-                    <span>Verify & Claim Ownership</span>
-                  </button>
-                )}
-
-                {canManage && (
-                  <button
-                    type="button"
-                    onClick={() => setShowReview(true)}
-                    className="py-2.5 px-4 rounded-xl text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 flex items-center gap-2"
-                  >
-                    <FolderHeart className="w-4 h-4" />
-                    <span>Review Submitted Claims ({claimsCount})</span>
-                  </button>
-                )}
-
-                {canManage && item.status !== 'RETURNED' && (
-                  <button
-                    type="button"
-                    onClick={() => handleUpdateStatus('RETURNED')}
-                    className="py-2.5 px-4 rounded-xl text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 flex items-center gap-1.5"
-                  >
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span>Mark as Returned</span>
-                  </button>
-                )}
-              </div>
             </div>
           </div>
         </div>
 
-        {/* Radar Sidebar */}
-        <div className="space-y-4">
-          <div className="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-xs space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
-                  <Sparkles className="w-4 h-4" />
+        {/* Details & Actions Column (Right 5 Cols) */}
+        <div className="lg:col-span-5 space-y-6">
+          <div className="foundry-card rounded-xl p-6 space-y-5">
+            <div>
+              <span className="editorial-kicker text-khoj-orange">
+                {getCategoryLabel(item.category)}
+              </span>
+              <h1 className="text-2xl sm:text-3xl font-serif font-normal text-foundry-950 mt-1">
+                {item.title}
+              </h1>
+            </div>
+
+            {/* Spatial & Chronological Metadata */}
+            <div className="space-y-3 pt-4 border-t border-neutral-100 text-xs">
+              <div className="flex items-start gap-3">
+                <MapPin className="w-4 h-4 text-neutral-500 shrink-0 mt-0.5" />
+                <div>
+                  <span className="editorial-kicker">Campus Location</span>
+                  <div className="text-foundry-900 font-semibold">{item.campusArea || 'Main Campus'}</div>
+                  <div className="text-[11px] text-neutral-400 font-mono mt-0.5">
+                    Zone: {getZoneLabel(item.zone)} • Lat: {item.latitude}, Lng: {item.longitude}
+                  </div>
                 </div>
-                <h3 className="text-sm font-bold text-slate-900">Match Radar</h3>
+              </div>
+
+              <div className="flex items-start gap-3 pt-2">
+                <Calendar className="w-4 h-4 text-neutral-500 shrink-0 mt-0.5" />
+                <div>
+                  <span className="editorial-kicker">Incident Timestamp</span>
+                  <div className="text-foundry-900 font-semibold">
+                    {new Date(item.incidentDate).toLocaleString(undefined, {
+                      dateStyle: 'medium',
+                      timeStyle: 'short',
+                    })}
+                  </div>
+                  <div className="text-[11px] text-neutral-400 mt-0.5">
+                    Archived {formatTimeAgo(item.createdAt)}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Pills */}
+            <div className="pt-4 border-t border-neutral-100 space-y-2.5">
+              {!isOwner && item.status === 'OPEN' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!isAuthenticated) openLoginModal();
+                    else setShowClaim(true);
+                  }}
+                  className="w-full foundry-pill-primary py-3 px-4 flex items-center justify-center gap-2"
+                >
+                  <Lock className="w-3.5 h-3.5 text-khoj-orange" />
+                  <span>Verify &amp; Claim Ownership</span>
+                </button>
+              )}
+
+              {canManage && (
+                <button
+                  type="button"
+                  onClick={() => setShowReview(true)}
+                  className="w-full foundry-pill-outline py-2.5 px-4 flex items-center justify-center gap-2"
+                >
+                  <FolderHeart className="w-3.5 h-3.5" />
+                  <span>Review Submitted Claims ({claimsCount})</span>
+                </button>
+              )}
+
+              {canManage && item.status !== 'RETURNED' && (
+                <button
+                  type="button"
+                  onClick={() => handleUpdateStatus('RETURNED')}
+                  className="w-full foundry-pill-outline py-2.5 px-4 flex items-center justify-center gap-2"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Mark as Returned</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Match Radar Sidebar */}
+          <div className="foundry-card rounded-xl p-5 space-y-3">
+            <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5 text-khoj-orange" />
+                <h3 className="editorial-kicker text-foundry-900">Spatial Match Radar</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setShowRadar(true)}
-                className="text-xs text-blue-600 hover:text-blue-800 font-bold"
+                className="text-[10px] uppercase tracking-wider font-semibold text-neutral-500 hover:text-foundry-900"
               >
-                Deep Scan
+                Scan All
               </button>
             </div>
 
-            <p className="text-xs text-slate-500">
-              FoundBeacon automatically scores opposite reports using PostGIS distance, keywords, and time proximity.
+            <p className="text-xs text-neutral-500 font-light">
+              KhojSetu calculates spatial cosine similarity against corresponding reports.
             </p>
 
             {sidebarMatches.length === 0 ? (
-              <div className="p-4 bg-slate-50 rounded-2xl text-center text-xs text-slate-400">
-                No active candidate items meet the threshold right now.
+              <div className="py-4 text-center text-xs text-neutral-400">
+                No active candidate pairs meet the threshold.
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {sidebarMatches.map((m: any) => (
                   <div
                     key={m.item.id}
-                    className="p-3.5 rounded-2xl border border-slate-200 hover:border-blue-300 bg-slate-50/50 hover:bg-blue-50/20 transition space-y-2"
+                    onClick={() => setShowRadar(true)}
+                    className="p-3 rounded-lg bg-neutral-50 hover:bg-neutral-100 cursor-pointer transition border border-neutral-200/60"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <span className="text-[10px] font-bold uppercase text-white bg-slate-800 px-1.5 py-0.5 rounded">
+                        <span className="text-[9px] font-semibold uppercase tracking-wider bg-foundry-900 text-white px-1.5 py-0.5 rounded">
                           {m.item.type}
                         </span>
-                        <h4 className="text-xs font-bold text-slate-900 truncate mt-1">{m.item.title}</h4>
+                        <h4 className="text-xs font-semibold text-foundry-900 truncate mt-1">{m.item.title}</h4>
                       </div>
-                      <span className="shrink-0 text-xs font-black px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                      <span className="text-[9px] font-mono font-semibold px-2 py-0.5 rounded-full bg-neutral-200 text-foundry-900">
                         {m.score}%
                       </span>
                     </div>
-
-                    <p className="text-[11px] text-slate-500 line-clamp-2">{m.explanationSummary}</p>
-
-                    <button
-                      type="button"
-                      onClick={() => setShowRadar(true)}
-                      className="text-xs font-bold text-blue-600 hover:underline inline-block pt-1"
-                    >
-                      Inspect Match Factors →
-                    </button>
+                    <p className="text-[11px] text-neutral-500 line-clamp-1 mt-1">{m.explanationSummary}</p>
                   </div>
                 ))}
               </div>

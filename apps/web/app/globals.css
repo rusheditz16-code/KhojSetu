@@ -3,49 +3,118 @@
 @tailwind utilities;
 
 :root {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, sans-serif;
-  --bg-dark: #0b1313;
-  --panel-dark: #121c1d;
-  --accent-emerald: #10b981;
-  --accent-mint: #34d399;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --foundry-black: #121212;
+  --foundry-stone: #F7F7F7;
+  --foundry-hairline: rgba(18, 18, 18, 0.08);
+  --khoj-navy: #183059;
+  --khoj-orange: #FF7A00;
 }
 
 body {
-  background-color: #0b1313;
-  color: #1e293b;
+  background-color: #F7F7F7;
+  color: #121212;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 :focus-visible {
-  outline: 2px solid #10b981;
+  outline: 2px solid #121212;
   outline-offset: 2px;
 }
 
-/* Glassmorphism & Soft Card Styles from Dashboard V22 */
-.glass-card {
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.04), 0 0 1px 1px rgba(0, 0, 0, 0.02);
+/* Foundry Architectural Grid & Hairline Elements */
+.foundry-hairline {
+  border-color: rgba(18, 18, 18, 0.08);
 }
 
-.glass-card-hover {
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.glass-card-hover:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.08);
+.foundry-hairline-dark {
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
-.glass-card-dark {
-  background: #121c1d;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+/* Foundry Exhibition Card & Frame */
+.foundry-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(18, 18, 18, 0.08);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Custom Sleek Scrollbar */
+.foundry-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(18, 18, 18, 0.2);
+  box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.08);
+}
+
+/* Luxury Framed Matting for Product/Item Visuals */
+.foundry-matting {
+  background: #F4F4F4;
+  border: 1px solid rgba(18, 18, 18, 0.05);
+}
+
+/* Foundry High-Contrast Pill Buttons */
+.foundry-pill-primary {
+  background-color: #121212;
+  color: #FFFFFF;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transition: all 0.2s ease-in-out;
+}
+
+.foundry-pill-primary:hover {
+  background-color: #2b2b2b;
+  transform: translateY(-1px);
+}
+
+.foundry-pill-outline {
+  background-color: transparent;
+  color: #121212;
+  border: 1px solid #121212;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transition: all 0.2s ease-in-out;
+}
+
+.foundry-pill-outline:hover {
+  background-color: #121212;
+  color: #FFFFFF;
+}
+
+.foundry-pill-orange {
+  background-color: #FF7A00;
+  color: #FFFFFF;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transition: all 0.2s ease-in-out;
+}
+
+.foundry-pill-orange:hover {
+  background-color: #e66e00;
+  transform: translateY(-1px);
+}
+
+/* Tracked Editorial Microcopy */
+.editorial-kicker {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: #737373;
+}
+
+/* Custom Minimalist Architectural Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -53,10 +122,10 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #d4d4d4;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #a3a3a3;
 }

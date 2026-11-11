@@ -21,28 +21,30 @@ export default function StatsCard({
   badge?: string;
 }) {
   return (
-    <div className="glass-card glass-card-hover p-5 rounded-3xl relative overflow-hidden flex flex-col justify-between">
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{title}</span>
-        <div className="w-9 h-9 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center border border-emerald-500/20">
-          <Icon className="w-4 h-4" />
+    <div className="foundry-card p-5 rounded-xl flex flex-col justify-between">
+      <div className="flex items-center justify-between mb-4">
+        <span className="editorial-kicker">{title}</span>
+        <div className="w-8 h-8 rounded-full bg-neutral-100 text-foundry-900 flex items-center justify-center border border-neutral-200">
+          <Icon className="w-4 h-4 stroke-[1.75]" />
         </div>
       </div>
 
       <div>
-        <div className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">{value}</div>
+        <div className="text-3xl sm:text-4xl font-serif text-foundry-950 tracking-tight font-normal">
+          {value}
+        </div>
 
-        <div className="mt-2 flex items-center justify-between text-xs">
+        <div className="mt-3 pt-2.5 border-t border-neutral-100 flex items-center justify-between text-xs">
           {change !== undefined && (
-            <div className={`flex items-center gap-1 font-bold ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
+            <div className={`flex items-center gap-1 text-[11px] font-semibold ${isPositive ? 'text-emerald-700' : 'text-rose-700'}`}>
               {isPositive ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
               <span>{change}%</span>
             </div>
           )}
 
-          {subtitle && <span className="text-slate-400 text-[11px] truncate">{subtitle}</span>}
+          {subtitle && <span className="text-neutral-400 text-[10px] uppercase tracking-wider truncate">{subtitle}</span>}
           {badge && (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
+            <span className="px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wider bg-neutral-100 text-neutral-700">
               {badge}
             </span>
           )}

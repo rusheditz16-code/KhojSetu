@@ -111,16 +111,16 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Top Navigation View Pills (Matching Dashboard V22 Views) */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pb-2 border-b border-slate-200/60">
-        <div className="inline-flex items-center gap-1.5 p-1 rounded-2xl bg-white/80 border border-slate-200/80 shadow-2xs">
+      {/* Top View Navigation Pills (Foundry Minimalist Architecture) */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-neutral-200/80">
+        <div className="inline-flex items-center gap-1.5 p-1 rounded-full bg-white border border-neutral-200/80 shadow-2xs">
           <button
             type="button"
             onClick={() => setActiveTab('overview')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+            className={`px-4 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-wider transition flex items-center gap-2 ${
               activeTab === 'overview'
-                ? 'bg-slate-900 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                ? 'bg-foundry-900 text-white shadow-2xs'
+                : 'text-neutral-600 hover:text-foundry-900 hover:bg-neutral-50'
             }`}
           >
             <LayoutGrid className="w-3.5 h-3.5" />
@@ -130,36 +130,36 @@ export default function DashboardPage() {
           <button
             type="button"
             onClick={() => setActiveTab('feed')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+            className={`px-4 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-wider transition flex items-center gap-2 ${
               activeTab === 'feed'
-                ? 'bg-slate-900 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                ? 'bg-foundry-900 text-white shadow-2xs'
+                : 'text-neutral-600 hover:text-foundry-900 hover:bg-neutral-50'
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
-            <span>Campus Feed</span>
+            <span>Campus Catalog</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab('saved')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+            className={`px-4 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-wider transition flex items-center gap-2 ${
               activeTab === 'saved'
-                ? 'bg-slate-900 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                ? 'bg-foundry-900 text-white shadow-2xs'
+                : 'text-neutral-600 hover:text-foundry-900 hover:bg-neutral-50'
             }`}
           >
             <Bookmark className="w-3.5 h-3.5" />
-            <span>Saved for later</span>
+            <span>Saved Dossier</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab('profile')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+            className={`px-4 py-1.5 rounded-full text-[11px] font-semibold uppercase tracking-wider transition flex items-center gap-2 ${
               activeTab === 'profile'
-                ? 'bg-slate-900 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                ? 'bg-foundry-900 text-white shadow-2xs'
+                : 'text-neutral-600 hover:text-foundry-900 hover:bg-neutral-50'
             }`}
           >
             <UserCheck className="w-3.5 h-3.5" />
@@ -172,26 +172,26 @@ export default function DashboardPage() {
             type="button"
             onClick={fetchItems}
             disabled={loading}
-            className="p-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-600 hover:text-slate-900 text-xs font-semibold flex items-center gap-1.5 transition shadow-2xs"
+            className="px-3.5 py-1.5 rounded-full bg-white hover:bg-neutral-50 border border-neutral-200 text-neutral-600 hover:text-foundry-900 text-[10px] font-semibold uppercase tracking-wider flex items-center gap-1.5 transition shadow-2xs"
             title="Refresh items from database"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">Sync</span>
+            <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
+            <span>Sync</span>
           </button>
         </div>
       </div>
 
-      {/* VIEW 1: OVERVIEW (Main Dashboard V22 Layout) */}
+      {/* VIEW 1: OVERVIEW (Foundry Editorial Architecture) */}
       {activeTab === 'overview' && (
         <div className="space-y-6">
-          {/* Hero Banner ("Work's always better together") */}
+          {/* Split 50/50 Editorial Hero */}
           <DashboardHero
             onExploreMatches={() => {
               if (highlights.length > 0) setActiveRadarItem(highlights[0].lostItem);
             }}
           />
 
-          {/* 4 Stats Cards (StatsCard component from video code snippet) */}
+          {/* 4 Stats Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <StatsCard
               title="Open Lost Reports"
@@ -201,52 +201,52 @@ export default function DashboardPage() {
               subtitle="Active queries"
             />
             <StatsCard
-              title="Found Items"
+              title="Cataloged Finds"
               value={foundCount}
               change="+8.5"
               icon={Sparkles}
               subtitle="Safely recorded"
             />
             <StatsCard
-              title="Verified Returns"
+              title="Verified Restorations"
               value={returnedCount}
               change="+22.0"
               icon={CheckCircle2}
               subtitle="100% Handover"
             />
             <StatsCard
-              title="Privacy Shield"
+              title="Privacy Guard"
               value="100%"
               change="+5.0"
               icon={ShieldCheck}
-              subtitle="Encrypted proofs"
-              badge="W3C & OWASP"
+              subtitle="Zero exposure"
+              badge="OWASP & W3C"
             />
           </div>
 
           {/* 2-Column Workspace Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* Left 8 Columns: Match Radar + Items */}
+            {/* Left 8 Columns: Match Radar + Exhibition Catalog */}
             <div className="lg:col-span-8 space-y-6">
-              {/* "Unleash Your Potential" / High Confidence Match Banner */}
+              {/* High Confidence Match Highlight */}
               {highlights.length > 0 && (
-                <div className="p-6 rounded-[32px] bg-gradient-to-r from-emerald-100/90 via-teal-100/70 to-emerald-50 border border-emerald-300/60 shadow-xs relative overflow-hidden">
+                <div className="p-6 rounded-xl bg-white border border-neutral-200 shadow-foundry-frame relative overflow-hidden">
                   <div className="relative z-10 space-y-3">
                     <div className="flex items-center justify-between">
-                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider">
-                        <Zap className="w-3.5 h-3.5" />
-                        <span>High Confidence Match Detected</span>
+                      <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-foundry-900 text-white text-[9px] font-semibold uppercase tracking-widest">
+                        <Zap className="w-3 h-3 text-khoj-orange" />
+                        <span>High Confidence Pair Detected</span>
                       </div>
-                      <span className="text-[11px] font-bold text-emerald-900">
+                      <span className="text-[11px] font-mono font-semibold text-emerald-800">
                         {highlights[0]?.score}% Pair Confidence
                       </span>
                     </div>
 
                     <div>
-                      <h3 className="text-base sm:text-lg font-black text-slate-900">
-                        Pairing found for &quot;{highlights[0]?.lostItem?.title}&quot;
+                      <h3 className="text-base sm:text-lg font-serif font-normal text-foundry-950">
+                        Pairing discovered for &quot;{highlights[0]?.lostItem?.title}&quot;
                       </h3>
-                      <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                      <p className="text-xs text-neutral-600 mt-1 leading-relaxed font-light">
                         {highlights[0]?.explanationSummary}
                       </p>
                     </div>
@@ -255,9 +255,9 @@ export default function DashboardPage() {
                       <button
                         type="button"
                         onClick={() => setActiveRadarItem(highlights[0].lostItem)}
-                        className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-md transition"
+                        className="foundry-pill-primary px-4 py-2 flex items-center gap-1.5 text-[10px]"
                       >
-                        <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                        <Sparkles className="w-3 h-3 text-khoj-orange" />
                         <span>Inspect Match Factors</span>
                       </button>
 
@@ -267,7 +267,7 @@ export default function DashboardPage() {
                           if (!isAuthenticated) openLoginModal();
                           else setActiveClaimItem(highlights[0].foundItem);
                         }}
-                        className="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-800 font-bold text-xs flex items-center gap-1.5 transition"
+                        className="foundry-pill-outline px-4 py-2 flex items-center gap-1.5 text-[10px]"
                       >
                         <span>Verify Claim</span>
                         <ArrowRight className="w-3 h-3" />
@@ -278,21 +278,23 @@ export default function DashboardPage() {
               )}
 
               {/* Feed Header */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between pt-2">
                 <div>
-                  <h2 className="text-xl font-black text-slate-900">Recent Campus Reports</h2>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Categorized items with approximate PostGIS campus coordinates
+                  <h2 className="text-xl sm:text-2xl font-serif font-normal text-foundry-950">
+                    Recent Campus Exhibits
+                  </h2>
+                  <p className="text-xs text-neutral-500 mt-0.5">
+                    Categorized possessions with approximate PostGIS spatial coordinates
                   </p>
                 </div>
 
                 <button
                   type="button"
                   onClick={() => setActiveTab('feed')}
-                  className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+                  className="text-[11px] uppercase tracking-wider font-semibold text-neutral-600 hover:text-foundry-900 flex items-center gap-1"
                 >
                   <span>View All ({items.length})</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-3 h-3" />
                 </button>
               </div>
 
@@ -314,67 +316,73 @@ export default function DashboardPage() {
 
             {/* Right 4 Columns: Calendar & Live Stream */}
             <div className="lg:col-span-4 space-y-5">
-              {/* Calendar Widget (November 2026) */}
+              {/* Calendar Widget */}
               <CalendarWidget />
 
-              {/* High Confidence Mini Pairs */}
-              <div className="glass-card p-5 rounded-3xl space-y-3">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-800">
-                    Live Match Radar
+              {/* Live Match Radar Mini Pairs */}
+              <div className="foundry-card p-5 rounded-xl space-y-3">
+                <div className="flex items-center justify-between border-b border-neutral-100 pb-2.5">
+                  <span className="editorial-kicker text-foundry-900">
+                    Spatial Match Stream
                   </span>
-                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                  <span className="text-[9px] font-semibold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                     Active
                   </span>
                 </div>
 
                 <div className="space-y-2.5">
-                  {highlights.slice(0, 3).map((h, i) => (
-                    <div
-                      key={i}
-                      onClick={() => setActiveRadarItem(h.lostItem)}
-                      className="p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 cursor-pointer transition border border-slate-200/60"
-                    >
-                      <div className="flex items-center justify-between text-xs font-bold mb-1">
-                        <span className="text-rose-600 truncate max-w-[120px]">{h.lostItem?.title}</span>
-                        <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-black">
-                          {h.score}%
-                        </span>
-                      </div>
-                      <div className="text-[11px] text-slate-500 line-clamp-1">{h.explanationSummary}</div>
+                  {highlights.length === 0 ? (
+                    <div className="py-6 text-center text-xs text-neutral-400">
+                      No active spatial pairs detected currently.
                     </div>
-                  ))}
+                  ) : (
+                    highlights.slice(0, 3).map((h, i) => (
+                      <div
+                        key={i}
+                        onClick={() => setActiveRadarItem(h.lostItem)}
+                        className="p-3 rounded-lg bg-neutral-50 hover:bg-neutral-100 cursor-pointer transition border border-neutral-200/60"
+                      >
+                        <div className="flex items-center justify-between text-xs font-semibold mb-1">
+                          <span className="text-foundry-900 truncate max-w-[140px]">{h.lostItem?.title}</span>
+                          <span className="px-2 py-0.5 rounded-full text-[9px] bg-foundry-900 text-white font-mono font-semibold">
+                            {h.score}%
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-neutral-500 line-clamp-1">{h.explanationSummary}</div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
 
               {/* Campus Activity Feed */}
-              <div className="glass-card p-5 rounded-3xl space-y-3">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-800 block border-b border-slate-100 pb-2.5">
-                  Recent Activity
+              <div className="foundry-card p-5 rounded-xl space-y-3">
+                <span className="editorial-kicker text-foundry-900 block border-b border-neutral-100 pb-2.5">
+                  Chronological Activity
                 </span>
 
                 <div className="space-y-3 text-xs">
                   <div className="flex items-start gap-2.5">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 shrink-0"></div>
+                    <div className="w-1.5 h-1.5 rounded-full bg-khoj-orange mt-1.5 shrink-0"></div>
                     <div>
-                      <div className="font-semibold text-slate-800">Priya Sharma submitted verification</div>
-                      <div className="text-[10px] text-slate-400">Dell XPS 13 • 12m ago</div>
+                      <div className="font-semibold text-foundry-900">Priya Sharma submitted verification</div>
+                      <div className="text-[10px] text-neutral-400 uppercase tracking-wider">Dell XPS 13 • 12m ago</div>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-2.5">
-                    <div className="w-2 h-2 rounded-full bg-blue-500 mt-1.5 shrink-0"></div>
+                    <div className="w-1.5 h-1.5 rounded-full bg-neutral-400 mt-1.5 shrink-0"></div>
                     <div>
-                      <div className="font-semibold text-slate-800">Rahul Verma posted found laptop</div>
-                      <div className="text-[10px] text-slate-400">Library Desk 7 • 1h ago</div>
+                      <div className="font-semibold text-foundry-900">Rahul Verma posted found laptop</div>
+                      <div className="text-[10px] text-neutral-400 uppercase tracking-wider">Library Desk 7 • 1h ago</div>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-2.5">
-                    <div className="w-2 h-2 rounded-full bg-purple-500 mt-1.5 shrink-0"></div>
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-600 mt-1.5 shrink-0"></div>
                     <div>
-                      <div className="font-semibold text-slate-800">Handover verified by Proctor</div>
-                      <div className="text-[10px] text-slate-400">Fossil Wallet • 3h ago</div>
+                      <div className="font-semibold text-foundry-900">Handover verified by Proctor</div>
+                      <div className="text-[10px] text-neutral-400 uppercase tracking-wider">Fossil Wallet • 3h ago</div>
                     </div>
                   </div>
                 </div>
@@ -390,38 +398,38 @@ export default function DashboardPage() {
           <FilterBar filters={filters} setFilters={setFilters} onReset={resetFilters} />
 
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-black text-slate-900">
-              Campus Reports Feed ({items.length})
+            <h2 className="text-xl sm:text-2xl font-serif font-normal text-foundry-950">
+              Campus Collection ({items.length})
             </h2>
-            <span className="text-xs text-slate-500">Filtered by live criteria</span>
+            <span className="text-[11px] uppercase tracking-wider text-neutral-400">Archived Exhibits</span>
           </div>
 
           {loading ? (
             <div className="py-20 text-center space-y-3">
-              <div className="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-              <p className="text-xs text-slate-500">Loading campus posts...</p>
+              <div className="w-7 h-7 border-2 border-foundry-900 border-t-transparent rounded-full animate-spin mx-auto"></div>
+              <p className="text-xs text-neutral-400 uppercase tracking-wider">Loading campus archive...</p>
             </div>
           ) : error ? (
-            <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl text-xs">{error}</div>
+            <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs">{error}</div>
           ) : items.length === 0 ? (
-            <div className="glass-card rounded-3xl p-12 text-center space-y-3">
-              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mx-auto">
-                <HelpCircle className="w-6 h-6" />
+            <div className="foundry-card rounded-xl p-12 text-center space-y-3">
+              <div className="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-400 mx-auto">
+                <HelpCircle className="w-5 h-5" />
               </div>
-              <h3 className="text-base font-bold text-slate-800">No matching reports found</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                Try clearing your search query or report an item!
+              <h3 className="text-base font-semibold text-foundry-900">No matching exhibits found</h3>
+              <p className="text-xs text-neutral-500 max-w-sm mx-auto">
+                Try refining your search keyword or submit a new campus report.
               </p>
               <button
                 type="button"
                 onClick={resetFilters}
-                className="mt-2 px-4 py-2 rounded-xl text-xs font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 transition"
+                className="foundry-pill-outline mt-2 px-4 py-2"
               >
                 Reset Filters
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {items.map((item) => (
                 <ItemCard
                   key={item.id}
@@ -438,7 +446,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* VIEW 3: SAVED FOR LATER (Matching Video Frame 00:04 & 00:05) */}
+      {/* VIEW 3: SAVED FOR LATER */}
       {activeTab === 'saved' && (
         <SavedForLaterView
           items={items}
@@ -450,7 +458,7 @@ export default function DashboardPage() {
         />
       )}
 
-      {/* VIEW 4: PROFILE & FOCUS (Matching Video Frame 00:03) */}
+      {/* VIEW 4: PROFILE & FOCUS */}
       {activeTab === 'profile' && <ProfileFocusView />}
 
       {/* Modals */}

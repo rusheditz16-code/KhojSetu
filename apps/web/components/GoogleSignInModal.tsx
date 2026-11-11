@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, ShieldCheck, Check, Sparkles, Building2, UserCircle2 } from 'lucide-react';
+import { X, ShieldCheck, Check } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export function GoogleLogo() {
   return (
-    <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
       <path
         fill="#4285F4"
         d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -64,36 +64,40 @@ export default function GoogleSignInModal() {
 
   return (
     <div
-      className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6"
+      className="fixed inset-0 z-50 overflow-y-auto bg-foundry-950/70 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6"
       role="dialog"
       aria-modal="true"
       aria-labelledby="google-auth-title"
     >
-      <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div className="bg-white rounded-xl max-w-md w-full shadow-2xl border border-neutral-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         {/* Top Header */}
-        <div className="p-6 bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 text-white relative">
+        <div className="p-6 bg-foundry-900 text-white relative">
           <button
             type="button"
             onClick={closeLoginModal}
-            className="absolute top-4 right-4 p-1 rounded-lg text-slate-400 hover:text-white transition"
+            className="absolute top-4 right-4 p-1 rounded-full text-neutral-400 hover:text-white transition"
           >
             <X className="w-5 h-5" />
           </button>
 
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center shadow-xs">
-              <GoogleLogo />
+          <div className="flex items-center gap-3 mb-3">
+            <div className="h-7 px-2 bg-white rounded flex items-center">
+              <img
+                src="/logo-transparent.png"
+                alt="KhojSetu"
+                className="h-5 w-auto object-contain"
+              />
             </div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-blue-300 bg-blue-500/20 px-2 py-0.5 rounded-full border border-blue-400/20">
-              Campus Identity Provider
+            <span className="editorial-kicker text-neutral-400">
+              Identity Verification
             </span>
           </div>
 
-          <h2 id="google-auth-title" className="text-xl font-black">
+          <h2 id="google-auth-title" className="text-xl font-serif font-normal">
             Sign in with Google
           </h2>
-          <p className="text-xs text-slate-300 mt-1">
-            Access KhojSetu using your official institutional university Google Workspace account.
+          <p className="text-xs text-neutral-400 mt-1 font-light">
+            Authenticate to file campus reports and verify ownership privately.
           </p>
         </div>
 
@@ -101,8 +105,8 @@ export default function GoogleSignInModal() {
         <div className="p-6 space-y-5">
           {/* Official Google Button Look */}
           <div className="space-y-2">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-              Choose Verified Campus Account
+            <span className="editorial-kicker text-foundry-900 block">
+              Choose Verified Persona
             </span>
 
             <div className="space-y-2">
@@ -112,32 +116,32 @@ export default function GoogleSignInModal() {
                   type="button"
                   disabled={isSubmitting}
                   onClick={() => handleQuickLogin(u)}
-                  className={`w-full p-3 rounded-2xl border transition flex items-center justify-between text-left group ${
+                  className={`w-full p-3 rounded-lg border transition flex items-center justify-between text-left group ${
                     currentUser?.id === u.id
-                      ? 'border-blue-500 bg-blue-50/60 ring-2 ring-blue-500/20'
-                      : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                      ? 'border-foundry-900 bg-neutral-50 ring-1 ring-foundry-900'
+                      : 'border-neutral-200 hover:border-neutral-400 hover:bg-neutral-50'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-700 font-bold text-xs border border-slate-200 group-hover:scale-105 transition-transform">
+                    <div className="w-8 h-8 rounded-full bg-foundry-900 text-white flex items-center justify-center font-semibold text-xs">
                       {u.name[0]}
                     </div>
                     <div>
-                      <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                      <div className="text-xs font-semibold text-foundry-900 flex items-center gap-1.5">
                         <span>{u.name}</span>
                         {u.role === 'MODERATOR' && (
-                          <span className="text-[9px] font-bold bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded">
-                            Proctor
+                          <span className="text-[9px] font-semibold uppercase tracking-wider bg-neutral-200 text-foundry-900 px-1.5 py-0.2 rounded">
+                            Curator
                           </span>
                         )}
                       </div>
-                      <div className="text-[11px] text-slate-500">{u.email}</div>
+                      <div className="text-[11px] text-neutral-400 font-mono">{u.email}</div>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-1.5">
                     <GoogleLogo />
-                    {currentUser?.id === u.id && <Check className="w-4 h-4 text-blue-600" />}
+                    {currentUser?.id === u.id && <Check className="w-4 h-4 text-foundry-900" />}
                   </div>
                 </button>
               ))}
@@ -146,16 +150,16 @@ export default function GoogleSignInModal() {
 
           {/* Divider */}
           <div className="relative flex items-center justify-center">
-            <div className="border-t border-slate-200 w-full"></div>
-            <span className="bg-white px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider relative">
-              Or Sign in with another @campus.edu
+            <div className="border-t border-neutral-200 w-full"></div>
+            <span className="bg-white px-3 editorial-kicker text-neutral-400 relative">
+              Or Sign In With Email
             </span>
           </div>
 
           {/* Custom Google account sign-in form */}
           <form onSubmit={handleCustomLogin} className="space-y-3">
             <div>
-              <label htmlFor="google-name" className="block text-xs font-semibold text-slate-700 mb-1">
+              <label htmlFor="google-name" className="editorial-kicker text-foundry-900 block mb-1">
                 Full Name
               </label>
               <input
@@ -165,12 +169,12 @@ export default function GoogleSignInModal() {
                 value={customName}
                 onChange={(e) => setCustomName(e.target.value)}
                 placeholder="e.g. Neha Gupta"
-                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:border-blue-500"
+                className="w-full px-3 py-2 text-xs rounded-lg border border-neutral-200 focus:border-foundry-900 outline-none"
               />
             </div>
 
             <div>
-              <label htmlFor="google-email" className="block text-xs font-semibold text-slate-700 mb-1">
+              <label htmlFor="google-email" className="editorial-kicker text-foundry-900 block mb-1">
                 Google Workspace Email
               </label>
               <input
@@ -180,14 +184,14 @@ export default function GoogleSignInModal() {
                 value={customEmail}
                 onChange={(e) => setCustomEmail(e.target.value)}
                 placeholder="name@campus.edu"
-                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:border-blue-500"
+                className="w-full px-3 py-2 text-xs rounded-lg border border-neutral-200 focus:border-foundry-900 outline-none"
               />
             </div>
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-2.5 px-4 rounded-xl text-xs font-bold text-slate-800 bg-white hover:bg-slate-50 border border-slate-300 shadow-xs flex items-center justify-center gap-2 transition"
+              className="w-full foundry-pill-primary py-2.5 flex items-center justify-center gap-2"
             >
               <GoogleLogo />
               <span>Continue with Google</span>
@@ -195,10 +199,10 @@ export default function GoogleSignInModal() {
           </form>
 
           {/* Privacy Guarantee Footer */}
-          <div className="pt-2 border-t border-slate-100 flex items-start gap-2 text-[11px] text-slate-400">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-            <span>
-              SSO protected: FoundBeacon never receives your password. Identifying claim details are shielded from other students.
+          <div className="pt-2 border-t border-neutral-100 flex items-start gap-2 text-[11px] text-neutral-400">
+            <ShieldCheck className="w-3.5 h-3.5 text-khoj-orange shrink-0 mt-0.5" />
+            <span className="font-light">
+              Identity protected: KhojSetu never stores passwords. Distinguishing verification proof answers are shielded from public view.
             </span>
           </div>
         </div>

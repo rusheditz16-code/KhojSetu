@@ -46,3 +46,6 @@ Thumbs.db
 
 # OpenTelemetry / Debug traces
 .system_generated/
+
+.vercel
+.env*
