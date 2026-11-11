@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { X, ShieldCheck, Mail, Lock, UserCircle2, AlertCircle, ArrowRight, Check } from 'lucide-react';
+import { X, ShieldCheck, Mail, Lock, UserCircle2, AlertCircle, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import GoogleOAuthButton from './GoogleOAuthButton';
 
 export function GoogleLogo() {
   return (
@@ -36,7 +37,7 @@ export default function GoogleSignInModal() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const googleBtnContainerRef = useRef<HTMLDivElement>(null);
+  const emailInputRef = useRef<HTMLInputElement>(null);
 
   // Sync mode with trigger
   useEffect(() => {
@@ -45,59 +46,19 @@ export default function GoogleSignInModal() {
     }
   }, [authModalMode]);
 
-  // Initialize official Google Identity Services (GIS) when modal opens
-  useEffect(() => {
-    if (!isLoginModalOpen) return;
-
-    const clientId =
-      process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
-      '1038592749581-khojsetu.apps.googleusercontent.com';
-
-    const checkAndInitGoogle = () => {
-      const google = (window as any).google;
-      if (google?.accounts?.id && googleBtnContainerRef.current) {
-        try {
-          google.accounts.id.initialize({
-            client_id: clientId,
-            callback: async (response: any) => {
-              if (response?.credential) {
-                try {
-                  setIsSubmitting(true);
-                  setError(null);
-                  await loginWithGoogle({ credential: response.credential });
-                } catch (e: any) {
-                  setError(e.message || 'Google verification failed.');
-                } finally {
-                  setIsSubmitting(false);
-                }
-              }
-            },
-            auto_select: false,
-          });
-
-          googleBtnContainerRef.current.innerHTML = '';
-          google.accounts.id.renderButton(googleBtnContainerRef.current, {
-            theme: 'outline',
-            size: 'large',
-            type: 'standard',
-            shape: 'pill',
-            text: tab === 'signup' ? 'signup_with' : 'continue_with',
-            width: 320,
-            logo_alignment: 'left',
-          });
-        } catch (err) {
-          console.warn('Google Identity Services init note:', err);
-        }
-      }
-    };
-
-    // Retry once if GIS script is still loading
-    checkAndInitGoogle();
-    const timer = setTimeout(checkAndInitGoogle, 600);
-    return () => clearTimeout(timer);
-  }, [isLoginModalOpen, tab, loginWithGoogle]);
-
   if (!isLoginModalOpen) return null;
+
+  const handleGoogleCredential = async (credential: string) => {
+    try {
+      setIsSubmitting(true);
+      setError(null);
+      await loginWithGoogle({ credential });
+    } catch (e: any) {
+      setError(e.message || 'Google verification failed.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -212,29 +173,12 @@ export default function GoogleSignInModal() {
           )}
 
           {/* Official Native Google Button Container */}
-          <div className="space-y-2">
-            <div className="flex justify-center w-full min-h-[44px]" ref={googleBtnContainerRef}>
-              {/* Fallback button while Google Identity Services renders */}
-              <button
-                type="button"
-                onClick={() => {
-                  const promptEmail = window.prompt('Enter your Google Account / Gmail:');
-                  if (promptEmail && promptEmail.includes('@')) {
-                    loginWithGoogle({ email: promptEmail.trim() });
-                  }
-                }}
-                className="w-full foundry-pill-outline py-2.5 px-4 flex items-center justify-center gap-2.5 text-xs sm:text-sm font-medium hover:bg-neutral-50 transition"
-              >
-                <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center shrink-0">
-                  <GoogleLogo />
-                </div>
-                <span>{tab === 'signup' ? 'Sign up with Google' : 'Continue with Google'}</span>
-              </button>
-            </div>
-            <p className="text-[10px] text-center text-neutral-400 font-light">
-              One-click Google authentication via Google Identity Services
-            </p>
-          </div>
+          <GoogleOAuthButton
+            mode={tab}
+            onCredential={handleGoogleCredential}
+            onStatusError={(msg) => setError(msg)}
+            onFocusEmail={() => emailInputRef.current?.focus()}
+          />
 
           {/* Divider */}
           <div className="relative flex items-center justify-center pt-1">
@@ -274,6 +218,7 @@ export default function GoogleSignInModal() {
               <div className="relative">
                 <Mail className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
+                  ref={emailInputRef}
                   id="auth-email"
                   type="email"
                   inputMode="email"

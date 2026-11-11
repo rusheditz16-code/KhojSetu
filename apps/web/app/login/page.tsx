@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { GoogleLogo } from '../../components/GoogleSignInModal';
+import GoogleOAuthButton from '../../components/GoogleOAuthButton';
 import { useAuth } from '../../context/AuthContext';
 import {
   ShieldCheck,
@@ -16,15 +16,22 @@ import {
 
 export default function LoginPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const { loginWithGoogle, isAuthenticated } = useAuth();
-  const [tab, setTab] = useState<'signin' | 'signup'>('signin');
+  const [tab, setTab] = useState<'signin' | 'signup'>(pathname === '/signup' ? 'signup' : 'signin');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const googleBtnContainerRef = useRef<HTMLDivElement>(null);
+  const emailInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (pathname === '/signup') {
+      setTab('signup');
+    }
+  }, [pathname]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -32,55 +39,18 @@ export default function LoginPage() {
     }
   }, [isAuthenticated, router]);
 
-  // Initialize official Google Identity Services
-  useEffect(() => {
-    const clientId =
-      process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
-      '1038592749581-khojsetu.apps.googleusercontent.com';
-
-    const checkAndInitGoogle = () => {
-      const google = (window as any).google;
-      if (google?.accounts?.id && googleBtnContainerRef.current) {
-        try {
-          google.accounts.id.initialize({
-            client_id: clientId,
-            callback: async (response: any) => {
-              if (response?.credential) {
-                try {
-                  setIsSubmitting(true);
-                  setError(null);
-                  await loginWithGoogle({ credential: response.credential });
-                  router.push('/');
-                } catch (e: any) {
-                  setError(e.message || 'Google verification failed.');
-                } finally {
-                  setIsSubmitting(false);
-                }
-              }
-            },
-            auto_select: false,
-          });
-
-          googleBtnContainerRef.current.innerHTML = '';
-          google.accounts.id.renderButton(googleBtnContainerRef.current, {
-            theme: 'outline',
-            size: 'large',
-            type: 'standard',
-            shape: 'pill',
-            text: tab === 'signup' ? 'signup_with' : 'continue_with',
-            width: 320,
-            logo_alignment: 'left',
-          });
-        } catch (err) {
-          console.warn('Google Identity Services note:', err);
-        }
-      }
-    };
-
-    checkAndInitGoogle();
-    const timer = setTimeout(checkAndInitGoogle, 600);
-    return () => clearTimeout(timer);
-  }, [tab, loginWithGoogle, router]);
+  const handleGoogleCredential = async (credential: string) => {
+    try {
+      setIsSubmitting(true);
+      setError(null);
+      await loginWithGoogle({ credential });
+      router.push('/');
+    } catch (e: any) {
+      setError(e.message || 'Google verification failed.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -204,29 +174,12 @@ export default function LoginPage() {
             )}
 
             {/* Official Google Button Container */}
-            <div className="space-y-2">
-              <div className="flex justify-center w-full min-h-[44px]" ref={googleBtnContainerRef}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const promptEmail = window.prompt('Enter your Google Account / Gmail:');
-                    if (promptEmail && promptEmail.includes('@')) {
-                      loginWithGoogle({ email: promptEmail.trim() });
-                      router.push('/');
-                    }
-                  }}
-                  className="w-full foundry-pill-outline py-2.5 px-4 flex items-center justify-center gap-2.5 text-xs sm:text-sm font-medium hover:bg-neutral-50 transition"
-                >
-                  <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center shrink-0">
-                    <GoogleLogo />
-                  </div>
-                  <span>{tab === 'signup' ? 'Sign up with Google' : 'Continue with Google'}</span>
-                </button>
-              </div>
-              <p className="text-[10px] text-center text-neutral-400 font-light">
-                One-click authentication via official Google Identity Services
-              </p>
-            </div>
+            <GoogleOAuthButton
+              mode={tab}
+              onCredential={handleGoogleCredential}
+              onStatusError={(msg) => setError(msg)}
+              onFocusEmail={() => emailInputRef.current?.focus()}
+            />
 
             <div className="relative flex items-center justify-center pt-1">
               <div className="border-t border-neutral-200 w-full"></div>
@@ -265,6 +218,7 @@ export default function LoginPage() {
                 <div className="relative">
                   <Mail className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
+                    ref={emailInputRef}
                     id="user-email"
                     type="email"
                     inputMode="email"

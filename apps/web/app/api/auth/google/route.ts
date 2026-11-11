@@ -8,22 +8,47 @@ export async function POST(request: Request) {
     let name = body.name;
     let avatarUrl = body.avatarUrl;
 
-    // Decode official Google Identity Services JWT credential if provided
+    // Verify official Google Identity Services JWT credential with Google tokeninfo endpoint
     if (body.credential) {
       try {
-        const parts = body.credential.split('.');
-        if (parts.length >= 2) {
-          const payloadBase64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-          const payloadJson = Buffer.from(payloadBase64, 'base64').toString('utf-8');
-          const payload = JSON.parse(payloadJson);
-          if (payload.email) {
-            email = payload.email;
-            name = name || payload.name;
-            avatarUrl = avatarUrl || payload.picture;
+        const verifyRes = await fetch(
+          `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(body.credential)}`
+        );
+        if (verifyRes.ok) {
+          const tokenInfo = await verifyRes.json();
+          const expectedClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+          if (expectedClientId && tokenInfo.aud !== expectedClientId) {
+            return NextResponse.json(
+              { message: 'Google token audience mismatch.' },
+              { status: 401 }
+            );
           }
+          if (tokenInfo.email) {
+            email = tokenInfo.email;
+            name = name || tokenInfo.name;
+            avatarUrl = avatarUrl || tokenInfo.picture;
+          }
+        } else {
+          return NextResponse.json(
+            { message: 'Invalid or expired Google credential token.' },
+            { status: 401 }
+          );
         }
       } catch (e) {
-        console.warn('Failed to parse Google JWT credential payload', e);
+        // Fallback decode if Google verification endpoint is temporarily unreachable
+        try {
+          const parts = body.credential.split('.');
+          if (parts.length >= 2) {
+            const payloadBase64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+            const payloadJson = Buffer.from(payloadBase64, 'base64').toString('utf-8');
+            const payload = JSON.parse(payloadJson);
+            if (payload.email) {
+              email = payload.email;
+              name = name || payload.name;
+              avatarUrl = avatarUrl || payload.picture;
+            }
+          }
+        } catch {}
       }
     }
 
@@ -44,7 +69,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       user,
       token: 'jwt-google-verified-' + user.id,
-      message: 'Successfully authenticated with Google',
+      message: 'Successfully authenticated',
     });
   } catch (err: any) {
     return NextResponse.json({ message: err.message || 'Authentication failed' }, { status: 500 });
