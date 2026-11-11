@@ -240,10 +240,12 @@ export default function ItemDetailsPage() {
                 <div>
                   <span className="editorial-kicker">Incident Timestamp</span>
                   <div className="text-foundry-900 font-semibold">
-                    {new Date(item.incidentDate).toLocaleString(undefined, {
-                      dateStyle: 'medium',
-                      timeStyle: 'short',
-                    })}
+                    {(() => {
+                      const d = item.incidentDate ? new Date(item.incidentDate) : new Date();
+                      return isNaN(d.getTime())
+                        ? 'Recently reported'
+                        : d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+                    })()}
                   </div>
                   <div className="text-[11px] text-neutral-400 mt-0.5">
                     Archived {formatTimeAgo(item.createdAt)}
@@ -258,7 +260,7 @@ export default function ItemDetailsPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    if (!isAuthenticated) openLoginModal();
+                    if (!isAuthenticated) openLoginModal('signin');
                     else setShowClaim(true);
                   }}
                   className="w-full foundry-pill-primary py-3 px-4 flex items-center justify-center gap-2"
@@ -318,26 +320,30 @@ export default function ItemDetailsPage() {
               </div>
             ) : (
               <div className="space-y-2">
-                {sidebarMatches.map((m: any) => (
-                  <div
-                    key={m.item.id}
-                    onClick={() => setShowRadar(true)}
-                    className="p-3 rounded-lg bg-neutral-50 hover:bg-neutral-100 cursor-pointer transition border border-neutral-200/60"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <span className="text-[9px] font-semibold uppercase tracking-wider bg-foundry-900 text-white px-1.5 py-0.5 rounded">
-                          {m.item.type}
+                {sidebarMatches.map((m: any, idx: number) => {
+                  const candidate = m?.item || m?.candidateItem;
+                  if (!candidate) return null;
+                  return (
+                    <div
+                      key={candidate.id || idx}
+                      onClick={() => setShowRadar(true)}
+                      className="p-3 rounded-lg bg-neutral-50 hover:bg-neutral-100 cursor-pointer transition border border-neutral-200/60"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <span className="text-[9px] font-semibold uppercase tracking-wider bg-foundry-900 text-white px-1.5 py-0.5 rounded">
+                            {candidate.type}
+                          </span>
+                          <h4 className="text-xs font-semibold text-foundry-900 truncate mt-1">{candidate.title}</h4>
+                        </div>
+                        <span className="text-[9px] font-mono font-semibold px-2 py-0.5 rounded-full bg-neutral-200 text-foundry-900">
+                          {m.score}%
                         </span>
-                        <h4 className="text-xs font-semibold text-foundry-900 truncate mt-1">{m.item.title}</h4>
                       </div>
-                      <span className="text-[9px] font-mono font-semibold px-2 py-0.5 rounded-full bg-neutral-200 text-foundry-900">
-                        {m.score}%
-                      </span>
+                      <p className="text-[11px] text-neutral-500 line-clamp-1 mt-1">{m.explanationSummary}</p>
                     </div>
-                    <p className="text-[11px] text-neutral-500 line-clamp-1 mt-1">{m.explanationSummary}</p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

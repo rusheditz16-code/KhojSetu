@@ -1,4 +1,8 @@
-// Comprehensive In-Memory Campus Database & Explainable Matching Engine for KhojSetu on Vercel
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
+
+// Comprehensive In-Memory + Temp-Synced Campus Database & Explainable Matching Engine for KhojSetu
 function uuidv4(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
@@ -304,11 +308,44 @@ globalThis.__KHOJSETU_CLAIMS = globalThis.__KHOJSETU_CLAIMS || [...INITIAL_CLAIM
 globalThis.__KHOJSETU_NOTIFS = globalThis.__KHOJSETU_NOTIFS || [...INITIAL_NOTIFICATIONS];
 globalThis.__KHOJSETU_AUDITS = globalThis.__KHOJSETU_AUDITS || [...INITIAL_AUDIT_LOGS];
 
-const users = globalThis.__KHOJSETU_USERS;
-const items = globalThis.__KHOJSETU_ITEMS;
-const claims = globalThis.__KHOJSETU_CLAIMS;
-const notifications = globalThis.__KHOJSETU_NOTIFS;
-const auditLogs = globalThis.__KHOJSETU_AUDITS;
+const STORE_FILE = path.join(os.tmpdir(), 'khojsetu-store-v2.json');
+let lastMtimeMs = 0;
+
+const users: User[] = globalThis.__KHOJSETU_USERS!;
+const items: Item[] = globalThis.__KHOJSETU_ITEMS!;
+const claims: Claim[] = globalThis.__KHOJSETU_CLAIMS!;
+const notifications: Notification[] = globalThis.__KHOJSETU_NOTIFS!;
+const auditLogs: AuditLog[] = globalThis.__KHOJSETU_AUDITS!;
+
+function syncFromDisk() {
+  try {
+    if (!fs.existsSync(STORE_FILE)) return;
+    const stat = fs.statSync(STORE_FILE);
+    if (stat.mtimeMs <= lastMtimeMs) return;
+    const raw = fs.readFileSync(STORE_FILE, 'utf-8');
+    const data = JSON.parse(raw);
+    if (Array.isArray(data.users)) { users.length = 0; users.push(...data.users); }
+    if (Array.isArray(data.items)) { items.length = 0; items.push(...data.items); }
+    if (Array.isArray(data.claims)) { claims.length = 0; claims.push(...data.claims); }
+    if (Array.isArray(data.notifications)) { notifications.length = 0; notifications.push(...data.notifications); }
+    if (Array.isArray(data.auditLogs)) { auditLogs.length = 0; auditLogs.push(...data.auditLogs); }
+    lastMtimeMs = stat.mtimeMs;
+  } catch (e) {}
+}
+
+function saveToDisk() {
+  try {
+    fs.writeFileSync(
+      STORE_FILE,
+      JSON.stringify({ users, items, claims, notifications, auditLogs }),
+      'utf-8'
+    );
+    const stat = fs.statSync(STORE_FILE);
+    lastMtimeMs = stat.mtimeMs;
+  } catch (e) {}
+}
+
+syncFromDisk();
 
 // Distance calculation (Haversine PostGIS simulation)
 function calculateDistanceMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -408,29 +445,46 @@ function computeMatch(source: Item, target: Item) {
   reasons.push(distanceExplanation);
   reasons.push(timeExplanation);
 
+  const tier = totalScore >= 70 ? 'HIGH' : totalScore >= 45 ? 'MEDIUM' : 'LOW';
+
   return {
+    item: target,
     candidateItem: target,
     score: totalScore,
-    confidence: totalScore >= 70 ? 'HIGH' : totalScore >= 45 ? 'MEDIUM' : 'LOW',
+    confidence: tier,
+    confidenceTier: tier,
     explanationSummary: 'Matches because of ' + reasons.join(', ') + '.',
-    factors: {
-      categoryMatch: { score: categoryScore, max: 35, matched: categoryMatch },
-      keywordMatch: { score: keywordScore, max: 25, keywords: matchedKeywords },
-      spatialProximity: { score: locationScore, max: 25, distanceMeters, explanation: distanceExplanation },
-      timeProximity: { score: timeScore, max: 15, timeDiffHours: Math.round(timeDiffHours), explanation: timeExplanation },
-    },
+    factors: [
+      { factor: 'Category', points: categoryScore, maxPoints: 35, matched: categoryMatch },
+      { factor: 'Keywords', points: keywordScore, maxPoints: 25, keywords: matchedKeywords },
+      { factor: 'Spatial', points: locationScore, maxPoints: 25, distanceMeters, explanation: distanceExplanation },
+      { factor: 'Timing', points: timeScore, maxPoints: 15, timeDiffHours: Math.round(timeDiffHours), explanation: timeExplanation },
+    ],
   };
 }
 
 export const serverStore = {
   // Users
-  getUsers: () => users,
-  getUserById: (id: string) => users.find((u) => u.id === id) || null,
-  getUserByEmail: (email: string) => users.find((u) => u.email.toLowerCase() === email.toLowerCase()) || null,
+  getUsers: () => {
+    syncFromDisk();
+    return users;
+  },
+  getUserById: (id: string) => {
+    syncFromDisk();
+    return users.find((u) => u.id === id) || null;
+  },
+  getUserByEmail: (email: string) => {
+    syncFromDisk();
+    return users.find((u) => u.email.toLowerCase() === email.toLowerCase()) || null;
+  },
   upsertGoogleUser: (data: { email: string; name: string; avatarUrl?: string; role?: string }) => {
+    syncFromDisk();
     const existing = users.find((u) => u.email.toLowerCase() === data.email.toLowerCase());
     if (existing) {
-      if (data.name && existing.name !== data.name) existing.name = data.name;
+      if (data.name && existing.name !== data.name) {
+        existing.name = data.name;
+        saveToDisk();
+      }
       return existing;
     }
     const isProctor = data.email.includes('proctor') || data.email.includes('mod') || data.email.includes('admin');
@@ -444,11 +498,13 @@ export const serverStore = {
       createdAt: new Date().toISOString(),
     };
     users.unshift(newUser);
+    saveToDisk();
     return newUser;
   },
 
   // Items
   getItems: (filters: { type?: string; category?: string; zone?: string; status?: string; search?: string } = {}) => {
+    syncFromDisk();
     return items.filter((item) => {
       if (filters.type && filters.type !== 'all' && item.type.toUpperCase() !== filters.type.toUpperCase()) return false;
       if (filters.category && item.category !== filters.category) return false;
@@ -464,8 +520,12 @@ export const serverStore = {
       return true;
     });
   },
-  getItemById: (id: string) => items.find((i) => i.id === id) || null,
+  getItemById: (id: string) => {
+    syncFromDisk();
+    return items.find((i) => i.id === id) || null;
+  },
   createItem: (itemData: Partial<Item> & { userId: string; title: string; type: 'LOST' | 'FOUND' }) => {
+    syncFromDisk();
     const newItem: Item = {
       id: 'itm-' + uuidv4().substring(0, 8),
       type: itemData.type,
@@ -507,19 +567,24 @@ export const serverStore = {
       });
     }
 
+    saveToDisk();
     return newItem;
   },
   updateItemStatus: (id: string, status: 'OPEN' | 'CLAIM_PENDING' | 'RETURNED') => {
+    syncFromDisk();
     const it = items.find((i) => i.id === id);
     if (!it) return null;
     it.status = status;
     it.updatedAt = new Date().toISOString();
+    saveToDisk();
     return it;
   },
   deleteItem: (id: string) => {
+    syncFromDisk();
     const idx = items.findIndex((i) => i.id === id);
     if (idx !== -1) {
       items.splice(idx, 1);
+      saveToDisk();
       return true;
     }
     return false;
@@ -527,6 +592,7 @@ export const serverStore = {
 
   // Match Radar
   getMatches: (id: string, minScore = 30) => {
+    syncFromDisk();
     const source = items.find((i) => i.id === id);
     if (!source) return [];
     return items
@@ -536,6 +602,7 @@ export const serverStore = {
       .sort((a, b) => b.score - a.score);
   },
   getHighlights: () => {
+    syncFromDisk();
     const lostItems = items.filter((i) => i.type === 'LOST' && i.status !== 'RETURNED');
     const foundItems = items.filter((i) => i.type === 'FOUND' && i.status !== 'RETURNED');
     const pairings: any[] = [];
@@ -559,6 +626,7 @@ export const serverStore = {
 
   // Claims with Strict Privacy Shield
   createClaim: (claimData: { itemId: string; claimantId: string; privateProofDetail: string; privateProofPhotoUrl?: string }) => {
+    syncFromDisk();
     const it = items.find((i) => i.id === claimData.itemId);
     if (!it) throw new Error('Item not found');
 
@@ -587,9 +655,11 @@ export const serverStore = {
       createdAt: new Date().toISOString(),
     });
 
+    saveToDisk();
     return newClaim;
   },
   getClaimsByItem: (itemId: string, requesterId: string, isModerator = false) => {
+    syncFromDisk();
     const it = items.find((i) => i.id === itemId);
     if (!it) return [];
 
@@ -606,6 +676,7 @@ export const serverStore = {
       }));
   },
   getMyClaims: (claimantId: string) => {
+    syncFromDisk();
     return claims
       .filter((c) => c.claimantId === claimantId)
       .map((c) => ({
@@ -614,6 +685,7 @@ export const serverStore = {
       }));
   },
   reviewClaim: (claimId: string, status: 'APPROVED' | 'REJECTED', notes?: string, pickupInstructions?: string) => {
+    syncFromDisk();
     const clm = claims.find((c) => c.id === claimId);
     if (!clm) throw new Error('Claim not found');
     clm.status = status;
@@ -644,24 +716,29 @@ export const serverStore = {
       createdAt: new Date().toISOString(),
     });
 
+    saveToDisk();
     return clm;
   },
 
   // Moderation
   flagItem: (itemId: string, reason: string) => {
+    syncFromDisk();
     const it = items.find((i) => i.id === itemId);
     if (!it) return null;
     it.isFlagged = true;
     it.flagReason = reason;
+    saveToDisk();
     return it;
   },
   resolveFlag: (itemId: string, action: string, notes?: string) => {
+    syncFromDisk();
     const it = items.find((i) => i.id === itemId);
     if (!it) return null;
     it.isFlagged = false;
     it.flagReason = null;
     if (action === 'dismiss' || action === 'remove') {
-      serverStore.deleteItem(itemId);
+      const idx = items.findIndex((i) => i.id === itemId);
+      if (idx !== -1) items.splice(idx, 1);
     }
     auditLogs.unshift({
       id: 'aud-' + uuidv4().substring(0, 8),
@@ -673,9 +750,11 @@ export const serverStore = {
       details: JSON.stringify({ action, notes }),
       createdAt: new Date().toISOString(),
     });
+    saveToDisk();
     return it;
   },
   markReturned: (itemId: string, handedToName: string, notes?: string) => {
+    syncFromDisk();
     const it = items.find((i) => i.id === itemId);
     if (!it) return null;
     it.status = 'RETURNED';
@@ -690,28 +769,49 @@ export const serverStore = {
       details: JSON.stringify({ handedToName, notes }),
       createdAt: new Date().toISOString(),
     });
+    saveToDisk();
     return it;
   },
   getModerationStats: () => {
+    syncFromDisk();
     return {
       totalItems: items.length,
+      totalReports: items.length,
+      openLost: items.filter((i) => i.type === 'LOST' && i.status === 'OPEN').length,
+      openFound: items.filter((i) => i.type === 'FOUND' && i.status === 'OPEN').length,
       flaggedCount: items.filter((i) => i.isFlagged).length,
       returnedCount: items.filter((i) => i.status === 'RETURNED').length,
       openClaimsCount: claims.filter((c) => c.status === 'PENDING').length,
+      pendingClaims: claims.filter((c) => c.status === 'PENDING').length,
     };
   },
-  getFlaggedItems: () => items.filter((i) => i.isFlagged),
-  getAuditLogs: () => auditLogs.slice(0, 50),
+  getFlaggedItems: () => {
+    syncFromDisk();
+    return items.filter((i) => i.isFlagged);
+  },
+  getAuditLogs: () => {
+    syncFromDisk();
+    return auditLogs.slice(0, 50);
+  },
 
   // Notifications
-  getNotifications: (userId: string) => notifications.filter((n) => n.userId === userId),
+  getNotifications: (userId: string) => {
+    syncFromDisk();
+    return notifications.filter((n) => n.userId === userId);
+  },
   markNotificationRead: (id: string) => {
+    syncFromDisk();
     const notif = notifications.find((n) => n.id === id);
-    if (notif) notif.isRead = true;
+    if (notif) {
+      notif.isRead = true;
+      saveToDisk();
+    }
     return notif;
   },
   markAllNotificationsRead: (userId: string) => {
+    syncFromDisk();
     notifications.filter((n) => n.userId === userId).forEach((n) => (n.isRead = true));
+    saveToDisk();
     return true;
   },
 };

@@ -53,9 +53,14 @@ export default function ReportPage() {
       img.onload = () => {
         try {
           const canvas = document.createElement('canvas');
-          const maxDim = 1200; // Optimal high-res exhibition size
-          let width = img.width;
-          let height = img.height;
+          const maxDim = 1000; // Fast HD exhibition size
+          let width = img.naturalWidth || img.width || 0;
+          let height = img.naturalHeight || img.height || 0;
+
+          if (width <= 0 || height <= 0) {
+            setPhotoDataUrl(event.target?.result as string);
+            return;
+          }
 
           if (width > maxDim || height > maxDim) {
             if (width > height) {
@@ -67,12 +72,12 @@ export default function ReportPage() {
             }
           }
 
-          canvas.width = width;
-          canvas.height = height;
+          canvas.width = Math.max(1, width);
+          canvas.height = Math.max(1, height);
           const ctx = canvas.getContext('2d');
           if (ctx) {
-            ctx.drawImage(img, 0, 0, width, height);
-            const compressed = canvas.toDataURL('image/jpeg', 0.82);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            const compressed = canvas.toDataURL('image/jpeg', 0.78);
             setPhotoDataUrl(compressed);
           } else {
             setPhotoDataUrl(event.target?.result as string);
@@ -120,6 +125,10 @@ export default function ReportPage() {
       setError(null);
 
       const coords = ZONE_COORDINATES[zone] || ZONE_COORDINATES.library;
+      const parsedIncidentDate = incidentDate ? new Date(incidentDate) : new Date();
+      const isoIncidentDate = isNaN(parsedIncidentDate.getTime())
+        ? new Date().toISOString()
+        : parsedIncidentDate.toISOString();
 
       const payload = {
         type: type.toUpperCase(),
@@ -129,7 +138,7 @@ export default function ReportPage() {
         location_campus_area: campusArea.trim(),
         latitude: coords.lat,
         longitude: coords.lng,
-        incident_date: new Date(incidentDate).toISOString(),
+        incident_date: isoIncidentDate,
         description: description.trim(),
         secret_verification_prompt: secretPrompt.trim() || undefined,
         photoUrl: photoDataUrl || undefined,
@@ -140,7 +149,12 @@ export default function ReportPage() {
         body: JSON.stringify(payload),
       });
 
-      router.push(`/items/${res.item.id}`);
+      if (res?.item?.id) {
+        router.push(`/items/${res.item.id}`);
+      } else {
+        setError('Report created, but navigation ID was missing. Returning to catalog.');
+        router.push('/');
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to submit report. Please try again.');
     } finally {

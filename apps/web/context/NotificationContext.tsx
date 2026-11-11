@@ -55,7 +55,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   const markAllRead = async () => {
     try {
-      await apiRequest('/notifications/mark-all-read', { method: 'POST' });
+      await apiRequest('/notifications/read-all', { method: 'POST' });
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
       setUnreadCount(0);
     } catch (e) {}

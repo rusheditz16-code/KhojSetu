@@ -117,13 +117,24 @@ export default function MatchRadarModal({
                 <span className="text-[10px] uppercase tracking-wider text-neutral-400 font-mono">100 pt Scale</span>
               </div>
 
-              {matches.map((match) => {
-                const candidate = match.item;
-                const isHigh = match.score >= 75;
+              {matches.map((match, mIdx) => {
+                const candidate = match?.item || match?.candidateItem;
+                if (!candidate) return null;
+
+                const confidenceLabel = match?.confidenceTier || match?.confidence || 'MATCH';
+                const factorList = Array.isArray(match?.factors)
+                  ? match.factors
+                  : match?.factors && typeof match.factors === 'object'
+                  ? Object.entries(match.factors).map(([key, val]: [string, any]) => ({
+                      factor: key.replace(/([A-Z])/g, ' $1').trim(),
+                      points: val?.score ?? val?.points ?? 0,
+                      maxPoints: val?.max ?? val?.maxPoints ?? 25,
+                    }))
+                  : [];
 
                 return (
                   <div
-                    key={candidate.id}
+                    key={candidate.id || mIdx}
                     className="foundry-card rounded-xl p-4 transition space-y-3"
                   >
                     {/* Header */}
@@ -157,7 +168,7 @@ export default function MatchRadarModal({
                           <span>{match.score}% MATCH</span>
                         </div>
                         <div className="text-[10px] text-neutral-400 font-mono mt-0.5 uppercase tracking-wider">
-                          {match.confidenceTier} confidence
+                          {confidenceLabel} confidence
                         </div>
                       </div>
                     </div>
@@ -174,20 +185,22 @@ export default function MatchRadarModal({
                     </div>
 
                     {/* Factor Breakdown */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                      {match.factors.map((f: any, i: number) => (
-                        <div
-                          key={i}
-                          className="p-2 rounded-lg bg-white border border-neutral-200/80 flex flex-col justify-between"
-                        >
-                          <span className="text-[9px] text-neutral-400 font-semibold uppercase tracking-wider">{f.factor}</span>
-                          <div className="flex items-baseline justify-between mt-1">
-                            <span className="font-mono font-bold text-foundry-900">+{f.points}</span>
-                            <span className="text-[9px] text-neutral-400 font-mono">/{f.maxPoints} pts</span>
+                    {factorList.length > 0 && (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                        {factorList.map((f: any, i: number) => (
+                          <div
+                            key={i}
+                            className="p-2 rounded-lg bg-white border border-neutral-200/80 flex flex-col justify-between"
+                          >
+                            <span className="text-[9px] text-neutral-400 font-semibold uppercase tracking-wider">{f.factor}</span>
+                            <div className="flex items-baseline justify-between mt-1">
+                              <span className="font-mono font-bold text-foundry-900">+{f.points}</span>
+                              <span className="text-[9px] text-neutral-400 font-mono">/{f.maxPoints} pts</span>
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
 
                     {/* Action Footer */}
                     <div className="pt-3 border-t border-neutral-100 flex items-center justify-end gap-2">

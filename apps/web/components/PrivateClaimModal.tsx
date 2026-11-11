@@ -14,7 +14,7 @@ export default function PrivateClaimModal({
   onSuccess?: () => void;
 }) {
   const [proofDetail, setProofDetail] = useState('');
-  const [proofPhoto, setProofPhoto] = useState<File | null>(null);
+  const [proofPhotoName, setProofPhotoName] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,19 +26,43 @@ export default function PrivateClaimModal({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!allowed.includes(file.type)) {
-      setError('OWASP Alert: Only JPG, PNG, and WebP images are permitted.');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setError('OWASP Alert: File size exceeds the 5MB limit.');
-      return;
-    }
-
     setError(null);
-    setProofPhoto(file);
-    setPreview(URL.createObjectURL(file));
+    setProofPhotoName(file.name);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          const maxDim = 900;
+          let width = img.naturalWidth || img.width || 0;
+          let height = img.naturalHeight || img.height || 0;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          canvas.width = Math.max(1, width);
+          canvas.height = Math.max(1, height);
+          const ctx = canvas.getContext('2d');
+          if (ctx && width > 0 && height > 0) {
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            setPreview(canvas.toDataURL('image/jpeg', 0.78));
+          } else {
+            setPreview(ev.target?.result as string);
+          }
+        } catch {
+          setPreview(ev.target?.result as string);
+        }
+      };
+      img.onerror = () => setError('Could not process this image format.');
+      img.src = ev.target?.result as string;
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,16 +76,13 @@ export default function PrivateClaimModal({
       setIsSubmitting(true);
       setError(null);
 
-      const formData = new FormData();
-      formData.append('itemId', item.id);
-      formData.append('privateProofDetail', proofDetail.trim());
-      if (proofPhoto) {
-        formData.append('proof_photo', proofPhoto);
-      }
-
       const res = await apiRequest('/claims', {
         method: 'POST',
-        body: formData,
+        body: JSON.stringify({
+          itemId: item.id,
+          privateProofDetail: proofDetail.trim(),
+          privateProofPhotoUrl: preview || undefined,
+        }),
       });
 
       setSuccessMsg(res.message);
@@ -177,12 +198,12 @@ export default function PrivateClaimModal({
                 className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-semibold text-slate-700 transition"
               >
                 <Upload className="w-3.5 h-3.5 text-slate-500" />
-                <span>{proofPhoto ? 'Change Photo' : 'Attach Photo'}</span>
+                <span>{preview ? 'Change Photo' : 'Attach Photo'}</span>
               </label>
               <input
                 id="proof-file"
                 type="file"
-                accept="image/jpeg,image/png,image/webp"
+                accept="image/*"
                 onChange={handlePhotoSelect}
                 className="sr-only"
               />
@@ -190,11 +211,11 @@ export default function PrivateClaimModal({
               {preview && (
                 <div className="flex items-center gap-2">
                   <img src={preview} alt="Proof" className="w-10 h-10 object-cover rounded-lg border border-slate-200" />
-                  <span className="text-xs text-slate-600 truncate max-w-[140px]">{proofPhoto?.name}</span>
+                  <span className="text-xs text-slate-600 truncate max-w-[140px]">{proofPhotoName || 'Attached Proof'}</span>
                   <button
                     type="button"
                     onClick={() => {
-                      setProofPhoto(null);
+                      setProofPhotoName(null);
                       setPreview(null);
                     }}
                     className="text-xs text-red-600 hover:underline"
