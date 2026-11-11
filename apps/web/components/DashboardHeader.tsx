@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
@@ -15,6 +15,9 @@ import {
   Sparkles,
   Layers,
   GraduationCap,
+  ArrowRight,
+  LogOut,
+  User,
 } from 'lucide-react';
 import { formatTimeAgo } from '../lib/api';
 
@@ -29,7 +32,28 @@ export default function DashboardHeader({
 
   const [showPersonaMenu, setShowPersonaMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
+  const [showMobileProfile, setShowMobileProfile] = useState(false);
   const [searchValue, setSearchValue] = useState('');
+
+  const personaRef = useRef<HTMLDivElement>(null);
+  const notifRef = useRef<HTMLDivElement>(null);
+  const mobileProfileRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (personaRef.current && !personaRef.current.contains(event.target as Node)) {
+        setShowPersonaMenu(false);
+      }
+      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+        setShowNotifMenu(false);
+      }
+      if (mobileProfileRef.current && !mobileProfileRef.current.contains(event.target as Node)) {
+        setShowMobileProfile(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,14 +65,14 @@ export default function DashboardHeader({
   };
 
   return (
-    <header className="px-4 sm:px-8 py-3.5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 border-b border-neutral-200/80 bg-white/90 backdrop-blur-md sticky top-0 z-20">
+    <header className="px-3 sm:px-8 py-3 sm:py-3.5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4 border-b border-neutral-200/80 bg-white/90 backdrop-blur-md sticky top-0 z-20">
       {/* Left: Brand Identity & Search input */}
-      <div className="flex items-center gap-6 flex-1 max-w-xl">
+      <div className="flex items-center gap-3 sm:gap-6 flex-1 max-w-xl">
         <Link href="/" className="shrink-0 flex items-center">
           <img
             src="/logo-transparent.png"
             alt="KhojSetu"
-            className="h-8 sm:h-9 w-auto object-contain"
+            className="h-7 sm:h-9 w-auto object-contain"
           />
         </Link>
 
@@ -61,34 +85,37 @@ export default function DashboardHeader({
               setSearchValue(e.target.value);
               if (onSearch) onSearch(e.target.value);
             }}
-            placeholder="Search reports, models, items, campus zones..."
-            className="w-full pl-9 pr-4 py-2 rounded-full bg-neutral-100 hover:bg-neutral-50 focus:bg-white border border-transparent focus:border-foundry-900 text-xs text-foundry-900 placeholder-neutral-400 transition outline-none"
+            placeholder="Search reports, items, campus zones..."
+            className="w-full pl-9 pr-3 py-1.5 sm:py-2 rounded-full bg-neutral-100 hover:bg-neutral-50 focus:bg-white border border-transparent focus:border-foundry-900 text-xs text-foundry-900 placeholder-neutral-400 transition outline-none"
           />
         </form>
       </div>
 
       {/* Right: Persona Switcher, Notifications & Foundry Pill CTAs */}
-      <div className="flex items-center justify-between md:justify-end gap-2.5 shrink-0">
+      <div className="flex items-center justify-between md:justify-end gap-2 sm:gap-2.5 shrink-0">
         {/* Persona quick-switch (for demo testing) */}
-        <div className="relative">
+        <div className="relative" ref={personaRef}>
           <button
             type="button"
             onClick={() => setShowPersonaMenu(!showPersonaMenu)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium border border-neutral-200 transition"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium border border-neutral-200 transition active:scale-95"
+            aria-label="Persona switcher"
           >
             <GraduationCap className="w-3.5 h-3.5 text-neutral-500" />
-            <span className="hidden sm:inline text-neutral-400 text-[10px] uppercase tracking-wider">Persona:</span>
-            <strong className="text-foundry-900 text-xs font-semibold truncate max-w-[100px]">
-              {currentUser?.name?.split(' ')[0] || 'Demo'}
+            <span className="hidden md:inline text-neutral-400 text-[10px] uppercase tracking-wider">Persona:</span>
+            <strong className="text-foundry-900 text-xs font-semibold truncate max-w-[85px] sm:max-w-[100px]">
+              {currentUser?.name?.split(' ')[0] || 'Guest'}
             </strong>
             <ChevronDown className="w-3 h-3 text-neutral-400" />
           </button>
 
           {showPersonaMenu && (
-            <div className="absolute right-0 mt-2 w-64 bg-white text-foundry-900 rounded-xl shadow-xl border border-neutral-200 py-2 z-50 animate-in fade-in zoom-in-95 duration-100">
-              <div className="px-3.5 py-1.5 text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-b border-neutral-100 mb-1">
-                Select Campus Persona
+            <div className="absolute right-0 mt-2 w-72 bg-white text-foundry-900 rounded-xl shadow-2xl border border-neutral-200 py-2 z-50 animate-in fade-in zoom-in-95 duration-100">
+              <div className="px-3.5 py-1.5 text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-b border-neutral-100 mb-1 flex items-center justify-between">
+                <span>Campus Personas</span>
+                <span className="text-[9px] text-neutral-400 font-normal">Demo</span>
               </div>
+
               {usersList.map((u) => (
                 <button
                   key={u.id}
@@ -100,21 +127,52 @@ export default function DashboardHeader({
                     u.id === currentUser?.id ? 'bg-neutral-100 font-semibold text-foundry-950' : 'text-neutral-700'
                   }`}
                 >
-                  <div>
-                    <div className="font-semibold text-foundry-900">{u.name}</div>
-                    <div className="text-[10px] text-neutral-400">
+                  <div className="min-w-0 pr-2">
+                    <div className="font-semibold text-foundry-900 truncate">{u.name}</div>
+                    <div className="text-[10px] text-neutral-400 truncate">
                       {u.role === 'MODERATOR' ? 'Campus Proctor / Curator' : u.email}
                     </div>
                   </div>
-                  {u.id === currentUser?.id && <Check className="w-4 h-4 text-foundry-900" />}
+                  {u.id === currentUser?.id && <Check className="w-4 h-4 text-foundry-900 shrink-0" />}
                 </button>
               ))}
+
+              <div className="pt-1.5 mt-1.5 border-t border-neutral-100 px-2 space-y-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPersonaMenu(false);
+                    openLoginModal();
+                  }}
+                  className="w-full text-left px-2.5 py-1.5 text-xs font-semibold text-foundry-900 hover:bg-neutral-100 rounded-lg flex items-center justify-between transition"
+                >
+                  <span className="flex items-center gap-2">
+                    <GoogleLogo />
+                    <span>Sign In with another Google account...</span>
+                  </span>
+                  <ArrowRight className="w-3.5 h-3.5 text-neutral-400" />
+                </button>
+
+                {isAuthenticated && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowPersonaMenu(false);
+                      logout();
+                    }}
+                    className="w-full text-left px-2.5 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-lg flex items-center gap-2 transition"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Log Out</span>
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>
 
         {/* Notifications Bell */}
-        <div className="relative">
+        <div className="relative" ref={notifRef}>
           <button
             type="button"
             onClick={() => setShowNotifMenu(!showNotifMenu)}
@@ -178,30 +236,74 @@ export default function DashboardHeader({
 
         {/* Action: Google Sign In or Profile */}
         {isAuthenticated && currentUser ? (
-          <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-neutral-200">
-            <div className="text-right">
-              <div className="text-xs font-semibold text-foundry-900">{currentUser.name}</div>
-              <div className="text-[10px] text-neutral-400 uppercase tracking-wider">{currentUser.role === 'MODERATOR' ? 'Curator Desk' : 'Verified Member'}</div>
-            </div>
+          <div className="relative" ref={mobileProfileRef}>
+            <button
+              type="button"
+              onClick={() => setShowMobileProfile(!showMobileProfile)}
+              className="flex items-center gap-1.5 pl-1.5 sm:pl-2 sm:border-l border-neutral-200 text-left active:scale-95"
+            >
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-foundry-900 text-white font-semibold text-xs flex items-center justify-center shrink-0">
+                {currentUser.name ? currentUser.name[0].toUpperCase() : 'U'}
+              </div>
+              <div className="hidden sm:block text-right">
+                <div className="text-xs font-semibold text-foundry-900 max-w-[100px] truncate">{currentUser.name}</div>
+                <div className="text-[9px] text-neutral-400 uppercase tracking-wider font-mono">
+                  {currentUser.role === 'MODERATOR' ? 'Curator' : 'Student'}
+                </div>
+              </div>
+            </button>
+
+            {showMobileProfile && (
+              <div className="absolute right-0 mt-2 w-64 bg-white text-foundry-900 rounded-xl shadow-2xl border border-neutral-200 p-3.5 z-50 animate-in fade-in zoom-in-95 duration-100">
+                <div className="text-xs font-semibold text-foundry-900 truncate">{currentUser.name}</div>
+                <div className="text-[11px] text-neutral-400 font-mono truncate mt-0.5">{currentUser.email}</div>
+                <div className="mt-3 pt-2 border-t border-neutral-100 space-y-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowMobileProfile(false);
+                      openLoginModal();
+                    }}
+                    className="w-full text-left text-xs font-semibold text-neutral-700 hover:text-foundry-900 py-1 flex items-center justify-between"
+                  >
+                    <span>Switch Google Account</span>
+                    <GoogleLogo />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowMobileProfile(false);
+                      logout();
+                    }}
+                    className="w-full text-left text-xs font-semibold text-rose-600 hover:text-rose-700 py-1 flex items-center gap-1.5"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Log Out</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <button
             type="button"
             onClick={openLoginModal}
-            className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white hover:bg-neutral-50 border border-neutral-300 text-xs font-medium text-foundry-900 shadow-2xs transition"
+            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 rounded-full bg-white hover:bg-neutral-50 border border-neutral-300 text-xs font-semibold text-foundry-900 shadow-2xs transition active:scale-95"
+            title="Sign in with your Google account"
           >
             <GoogleLogo />
-            <span className="hidden sm:inline text-[11px] uppercase tracking-wider font-semibold">Sign in</span>
+            <span className="text-[11px] uppercase tracking-wider font-semibold">Sign In</span>
           </button>
         )}
 
         {/* Report Button (Foundry pill style) */}
         <Link
           href="/report"
-          className="foundry-pill-primary px-4 py-2 flex items-center gap-1.5 shadow-sm hover:shadow"
+          className="foundry-pill-primary px-3 sm:px-4 py-1.5 sm:py-2 flex items-center gap-1 shadow-sm hover:shadow text-[10px] sm:text-[11px]"
         >
           <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-          <span>Report Item</span>
+          <span className="hidden xs:inline">Report Item</span>
+          <span className="xs:hidden">Report</span>
         </Link>
       </div>
     </header>

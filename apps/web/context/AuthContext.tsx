@@ -22,7 +22,7 @@ interface AuthContextType {
   isLoginModalOpen: boolean;
   openLoginModal: () => void;
   closeLoginModal: () => void;
-  loginWithGoogle: (data: { email: string; name: string; avatarUrl?: string; role?: string }) => Promise<void>;
+  loginWithGoogle: (data: { email: string; name?: string; avatarUrl?: string; role?: string }) => Promise<void>;
   switchUser: (userId: string) => Promise<void>;
   logout: () => void;
   refreshProfile: () => Promise<void>;
@@ -41,25 +41,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(true);
       const [usersData, meData] = await Promise.all([
         apiRequest<{ users: User[] }>('/auth/users').catch(() => ({ users: [] })),
-        apiRequest<{ user: User }>('/auth/me').catch(() => ({ user: null })),
+        apiRequest<{ user: User | null }>('/auth/me').catch(() => ({ user: null })),
       ]);
       setUsersList(usersData.users || []);
 
-      const savedStoredUser = localStorage.getItem('khojsetu_google_user');
+      const savedStoredUser = typeof window !== 'undefined' ? localStorage.getItem('khojsetu_google_user') : null;
       if (savedStoredUser) {
         try {
           const parsed = JSON.parse(savedStoredUser);
-          setCurrentUser(parsed);
-          setActiveUserId(parsed.id);
-          return;
+          if (parsed && parsed.id) {
+            setCurrentUser(parsed);
+            setActiveUserId(parsed.id);
+            return;
+          }
         } catch (e) {}
       }
 
-      if (meData.user) {
+      if (meData?.user) {
         setCurrentUser(meData.user);
+        setActiveUserId(meData.user.id);
+      } else {
+        setCurrentUser(null);
+        setActiveUserId('');
       }
     } catch (err) {
       console.warn('Auth context init note:', err);
+      setCurrentUser(null);
     } finally {
       setIsLoading(false);
     }
@@ -69,12 +76,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchUsersAndProfile();
   }, []);
 
-  const loginWithGoogle = async (data: { email: string; name: string; avatarUrl?: string; role?: string }) => {
+  const loginWithGoogle = async (data: { email: string; name?: string; avatarUrl?: string; role?: string }) => {
     try {
       setIsLoading(true);
+
+      // Auto-derive clean display name from email if not given
+      let name = data.name?.trim();
+      if (!name) {
+        const prefix = data.email.split('@')[0].replace(/[._-]/g, ' ');
+        name = prefix
+          .split(' ')
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(' ');
+      }
+
       const res = await apiRequest<{ user: User; token: string }>('/auth/google', {
         method: 'POST',
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          name,
+        }),
       });
 
       const user = res.user;
@@ -83,7 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('khojsetu_google_user', JSON.stringify(user));
       setIsLoginModalOpen(false);
 
-      // Refresh list
+      // Refresh users list so new user appears everywhere
       const usersData = await apiRequest<{ users: User[] }>('/auth/users').catch(() => ({ users: [] }));
       setUsersList(usersData.users || []);
     } catch (err) {
@@ -106,8 +127,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
-    localStorage.removeItem('khojsetu_google_user');
-    localStorage.removeItem('khojsetu_user_id');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('khojsetu_google_user');
+      localStorage.removeItem('khojsetu_user_id');
+    }
+    setActiveUserId('');
     setCurrentUser(null);
   };
 

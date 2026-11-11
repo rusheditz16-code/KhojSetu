@@ -1,13 +1,17 @@
 export const API_BASE = '/api';
 
 export function getActiveUserId(): string {
-  if (typeof window === 'undefined') return 'usr-priya-01';
-  return localStorage.getItem('khojsetu_user_id') || 'usr-priya-01';
+  if (typeof window === 'undefined') return '';
+  return localStorage.getItem('khojsetu_user_id') || '';
 }
 
 export function setActiveUserId(id: string) {
   if (typeof window !== 'undefined') {
-    localStorage.setItem('khojsetu_user_id', id);
+    if (id) {
+      localStorage.setItem('khojsetu_user_id', id);
+    } else {
+      localStorage.removeItem('khojsetu_user_id');
+    }
   }
 }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, ShieldCheck, Check } from 'lucide-react';
+import { X, ShieldCheck, Check, ArrowRight, UserCircle2, Mail, AlertCircle, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export function GoogleLogo() {
@@ -32,17 +32,21 @@ export default function GoogleSignInModal() {
   const [customName, setCustomName] = useState('');
   const [customEmail, setCustomEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!isLoginModalOpen) return null;
 
   const handleQuickLogin = async (u: any) => {
     try {
       setIsSubmitting(true);
+      setError(null);
       await loginWithGoogle({
         email: u.email,
         name: u.name,
         role: u.role,
       });
+    } catch (err: any) {
+      setError(err.message || 'Login failed');
     } finally {
       setIsSubmitting(false);
     }
@@ -50,13 +54,27 @@ export default function GoogleSignInModal() {
 
   const handleCustomLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customEmail || !customName) return;
+    const email = customEmail.trim();
+    if (!email) {
+      setError('Please enter your Google account email.');
+      return;
+    }
+    if (!email.includes('@')) {
+      setError('Please enter a valid email address (e.g. name@gmail.com).');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
+      setError(null);
       await loginWithGoogle({
-        email: customEmail.trim(),
-        name: customName.trim(),
+        email,
+        name: customName.trim() || undefined,
       });
+      setCustomEmail('');
+      setCustomName('');
+    } catch (err: any) {
+      setError(err.message || 'Authentication failed. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -64,24 +82,25 @@ export default function GoogleSignInModal() {
 
   return (
     <div
-      className="fixed inset-0 z-50 overflow-y-auto bg-foundry-950/70 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6"
+      className="fixed inset-0 z-50 overflow-y-auto bg-foundry-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6"
       role="dialog"
       aria-modal="true"
       aria-labelledby="google-auth-title"
     >
-      <div className="bg-white rounded-xl max-w-md w-full shadow-2xl border border-neutral-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-neutral-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150 my-auto">
         {/* Top Header */}
-        <div className="p-6 bg-foundry-900 text-white relative">
+        <div className="p-5 sm:p-6 bg-foundry-900 text-white relative">
           <button
             type="button"
             onClick={closeLoginModal}
-            className="absolute top-4 right-4 p-1 rounded-full text-neutral-400 hover:text-white transition"
+            aria-label="Close dialog"
+            className="absolute top-4 right-4 p-2 rounded-full text-neutral-400 hover:text-white hover:bg-neutral-800 transition"
           >
             <X className="w-5 h-5" />
           </button>
 
-          <div className="flex items-center gap-3 mb-3">
-            <div className="h-7 px-2 bg-white rounded flex items-center">
+          <div className="flex items-center gap-3 mb-2.5">
+            <div className="h-7 px-2.5 bg-white rounded flex items-center shadow-xs">
               <img
                 src="/logo-transparent.png"
                 alt="KhojSetu"
@@ -93,116 +112,131 @@ export default function GoogleSignInModal() {
             </span>
           </div>
 
-          <h2 id="google-auth-title" className="text-xl font-serif font-normal">
+          <h2 id="google-auth-title" className="text-xl sm:text-2xl font-serif font-normal">
             Sign in with Google
           </h2>
-          <p className="text-xs text-neutral-400 mt-1 font-light">
-            Authenticate to file campus reports and verify ownership privately.
+          <p className="text-xs text-neutral-400 mt-1 font-light leading-relaxed">
+            Use any Google / Gmail account or university email to post reports and claim items privately.
           </p>
         </div>
 
         {/* Modal Body */}
-        <div className="p-6 space-y-5">
-          {/* Official Google Button Look */}
-          <div className="space-y-2">
-            <span className="editorial-kicker text-foundry-900 block">
-              Choose Verified Persona
-            </span>
-
-            <div className="space-y-2">
-              {usersList.slice(0, 3).map((u) => (
-                <button
-                  key={u.id}
-                  type="button"
-                  disabled={isSubmitting}
-                  onClick={() => handleQuickLogin(u)}
-                  className={`w-full p-3 rounded-lg border transition flex items-center justify-between text-left group ${
-                    currentUser?.id === u.id
-                      ? 'border-foundry-900 bg-neutral-50 ring-1 ring-foundry-900'
-                      : 'border-neutral-200 hover:border-neutral-400 hover:bg-neutral-50'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-foundry-900 text-white flex items-center justify-center font-semibold text-xs">
-                      {u.name[0]}
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-foundry-900 flex items-center gap-1.5">
-                        <span>{u.name}</span>
-                        {u.role === 'MODERATOR' && (
-                          <span className="text-[9px] font-semibold uppercase tracking-wider bg-neutral-200 text-foundry-900 px-1.5 py-0.2 rounded">
-                            Curator
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-[11px] text-neutral-400 font-mono">{u.email}</div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-1.5">
-                    <GoogleLogo />
-                    {currentUser?.id === u.id && <Check className="w-4 h-4 text-foundry-900" />}
-                  </div>
-                </button>
-              ))}
+        <div className="p-5 sm:p-6 space-y-5 max-h-[80vh] overflow-y-auto">
+          {error && (
+            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+              <span>{error}</span>
             </div>
-          </div>
+          )}
 
-          {/* Divider */}
-          <div className="relative flex items-center justify-center">
-            <div className="border-t border-neutral-200 w-full"></div>
-            <span className="bg-white px-3 editorial-kicker text-neutral-400 relative">
-              Or Sign In With Email
-            </span>
-          </div>
-
-          {/* Custom Google account sign-in form */}
-          <form onSubmit={handleCustomLogin} className="space-y-3">
+          {/* Primary Action: Sign in with ANY Google Account */}
+          <form onSubmit={handleCustomLogin} className="space-y-3.5">
             <div>
-              <label htmlFor="google-name" className="editorial-kicker text-foundry-900 block mb-1">
-                Full Name
+              <label htmlFor="google-email-input" className="editorial-kicker text-foundry-900 block mb-1">
+                Google Account / Gmail <span className="text-rose-500">*</span>
               </label>
-              <input
-                id="google-name"
-                type="text"
-                required
-                value={customName}
-                onChange={(e) => setCustomName(e.target.value)}
-                placeholder="e.g. Neha Gupta"
-                className="w-full px-3 py-2 text-xs rounded-lg border border-neutral-200 focus:border-foundry-900 outline-none"
-              />
+              <div className="relative">
+                <Mail className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  id="google-email-input"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  required
+                  value={customEmail}
+                  onChange={(e) => setCustomEmail(e.target.value)}
+                  placeholder="yourname@gmail.com or campus.edu"
+                  className="w-full pl-9 pr-3 py-2.5 text-xs sm:text-sm rounded-xl border border-neutral-300 focus:border-foundry-900 focus:ring-1 focus:ring-foundry-900 outline-none transition bg-white"
+                />
+              </div>
             </div>
 
             <div>
-              <label htmlFor="google-email" className="editorial-kicker text-foundry-900 block mb-1">
-                Google Workspace Email
+              <label htmlFor="google-name-input" className="editorial-kicker text-foundry-900 block mb-1">
+                Your Name <span className="text-neutral-400 font-normal lowercase">(optional)</span>
               </label>
-              <input
-                id="google-email"
-                type="email"
-                required
-                value={customEmail}
-                onChange={(e) => setCustomEmail(e.target.value)}
-                placeholder="name@campus.edu"
-                className="w-full px-3 py-2 text-xs rounded-lg border border-neutral-200 focus:border-foundry-900 outline-none"
-              />
+              <div className="relative">
+                <UserCircle2 className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  id="google-name-input"
+                  type="text"
+                  autoComplete="name"
+                  value={customName}
+                  onChange={(e) => setCustomName(e.target.value)}
+                  placeholder="e.g. Rahul Sharma"
+                  className="w-full pl-9 pr-3 py-2.5 text-xs sm:text-sm rounded-xl border border-neutral-300 focus:border-foundry-900 focus:ring-1 focus:ring-foundry-900 outline-none transition bg-white"
+                />
+              </div>
             </div>
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full foundry-pill-primary py-2.5 flex items-center justify-center gap-2"
+              className="w-full foundry-pill-primary py-3 px-4 flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg disabled:opacity-50 text-xs sm:text-sm"
             >
-              <GoogleLogo />
-              <span>Continue with Google</span>
+              <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center shrink-0">
+                <GoogleLogo />
+              </div>
+              <span>{isSubmitting ? 'Verifying with Google...' : 'Continue with Google Account'}</span>
             </button>
           </form>
 
+          {/* Divider */}
+          <div className="relative flex items-center justify-center pt-1">
+            <div className="border-t border-neutral-200 w-full"></div>
+            <span className="bg-white px-3 editorial-kicker text-neutral-400 relative">
+              Or Choose A Demo Persona
+            </span>
+          </div>
+
+          {/* Quick Demo Persona Switcher */}
+          <div className="space-y-2">
+            {usersList.slice(0, 3).map((u) => (
+              <button
+                key={u.id}
+                type="button"
+                disabled={isSubmitting}
+                onClick={() => handleQuickLogin(u)}
+                className={`w-full p-2.5 sm:p-3 rounded-xl border transition flex items-center justify-between text-left group active:scale-[0.99] ${
+                  currentUser?.id === u.id
+                    ? 'border-foundry-900 bg-neutral-100 ring-1 ring-foundry-900'
+                    : 'border-neutral-200 hover:border-neutral-400 hover:bg-neutral-50 bg-neutral-50/50'
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-full bg-foundry-900 text-white flex items-center justify-center font-semibold text-xs shrink-0">
+                    {u.name[0]}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-semibold text-foundry-900 flex items-center gap-1.5 truncate">
+                      <span className="truncate">{u.name}</span>
+                      {u.role === 'MODERATOR' && (
+                        <span className="text-[9px] font-semibold uppercase tracking-wider bg-neutral-200 text-foundry-900 px-1.5 py-0.2 rounded shrink-0">
+                          Curator
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[11px] text-neutral-500 font-mono truncate">{u.email}</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0 pl-2">
+                  <GoogleLogo />
+                  {currentUser?.id === u.id ? (
+                    <Check className="w-4 h-4 text-foundry-900" />
+                  ) : (
+                    <ArrowRight className="w-3.5 h-3.5 text-neutral-400 group-hover:text-foundry-900 transition-transform group-hover:translate-x-0.5" />
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+
           {/* Privacy Guarantee Footer */}
-          <div className="pt-2 border-t border-neutral-100 flex items-start gap-2 text-[11px] text-neutral-400">
+          <div className="pt-3 border-t border-neutral-100 flex items-start gap-2 text-[11px] text-neutral-500 font-light">
             <ShieldCheck className="w-3.5 h-3.5 text-khoj-orange shrink-0 mt-0.5" />
-            <span className="font-light">
-              Identity protected: KhojSetu never stores passwords. Distinguishing verification proof answers are shielded from public view.
+            <span>
+              Identity protected: KhojSetu never sees your password. Distinguishing ownership answers and phone contacts stay 100% private.
             </span>
           </div>
         </div>
