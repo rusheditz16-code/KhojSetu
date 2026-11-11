@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 
 export default function ProfileFocusView() {
-  const { currentUser, isAuthenticated, openLoginModal, switchUser, usersList } = useAuth();
+  const { currentUser, isAuthenticated, openLoginModal } = useAuth();
 
   const daysActivity = [
     { day: 'Mon', count: 4, height: '40%' },
@@ -64,7 +64,7 @@ export default function ProfileFocusView() {
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              onClick={openLoginModal}
+              onClick={() => openLoginModal('signin')}
               className="px-4 py-2 rounded-2xl bg-white hover:bg-slate-50 border border-slate-300 text-xs font-bold text-slate-800 shadow-2xs flex items-center gap-2 transition"
             >
               <GoogleLogo />

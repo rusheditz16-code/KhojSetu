@@ -15,7 +15,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const userId = request.headers.get('x-user-id') || 'usr-priya-01';
+    const userId = request.headers.get('x-user-id') || 'usr-anonymous';
     const contentType = request.headers.get('content-type') || '';
 
     let data: any = {};
@@ -25,22 +25,41 @@ export async function POST(request: Request) {
         type: (formData.get('type') as string) || 'LOST',
         title: formData.get('title') as string,
         category: (formData.get('category') as string) || 'electronics',
-        campusArea: formData.get('location_campus_area') as string,
-        zone: (formData.get('location_zone') as string) || 'library',
+        campusArea: (formData.get('location_campus_area') as string) || (formData.get('campusArea') as string) || 'Campus Area',
+        zone: (formData.get('location_zone') as string) || (formData.get('zone') as string) || 'library',
         latitude: parseFloat((formData.get('latitude') as string) || '12.9716'),
         longitude: parseFloat((formData.get('longitude') as string) || '77.5946'),
-        incidentDate: (formData.get('incident_date') as string) || new Date().toISOString(),
+        incidentDate: (formData.get('incident_date') as string) || (formData.get('incidentDate') as string) || new Date().toISOString(),
         description: formData.get('description') as string,
-        secretPrompt: formData.get('secret_verification_prompt') as string,
+        secretPrompt: (formData.get('secret_verification_prompt') as string) || (formData.get('secretPrompt') as string),
+        photoUrl: (formData.get('photoUrl') as string) || null,
       };
 
-      // If photo was provided in form data, provide realistic placeholder
       const photo = formData.get('photo') as File | null;
-      if (photo && photo.size > 0) {
-        data.photoUrl = 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=600&auto=format&fit=crop&q=80';
+      if (photo && photo.size > 0 && !data.photoUrl) {
+        try {
+          const arrayBuffer = await photo.arrayBuffer();
+          const base64 = Buffer.from(arrayBuffer).toString('base64');
+          data.photoUrl = `data:${photo.type || 'image/jpeg'};base64,${base64}`;
+        } catch (e) {
+          console.warn('Failed to encode photo buffer', e);
+        }
       }
     } else {
-      data = await request.json();
+      const json = await request.json();
+      data = {
+        type: json.type || 'LOST',
+        title: json.title,
+        category: json.category || 'electronics',
+        campusArea: json.location_campus_area || json.campusArea || 'Campus Area',
+        zone: json.location_zone || json.zone || 'library',
+        latitude: parseFloat(json.latitude || '12.9716'),
+        longitude: parseFloat(json.longitude || '77.5946'),
+        incidentDate: json.incident_date || json.incidentDate || new Date().toISOString(),
+        description: json.description,
+        secretPrompt: json.secret_verification_prompt || json.secretPrompt,
+        photoUrl: json.photoUrl || null,
+      };
     }
 
     if (!data.title || data.title.trim().length < 3) {

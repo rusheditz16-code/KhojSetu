@@ -10,14 +10,10 @@ import {
   Search,
   Bell,
   Plus,
-  ChevronDown,
-  Check,
   Sparkles,
-  Layers,
-  GraduationCap,
-  ArrowRight,
   LogOut,
   User,
+  FolderHeart,
 } from 'lucide-react';
 import { formatTimeAgo } from '../lib/api';
 
@@ -27,28 +23,23 @@ export default function DashboardHeader({
   onSearch?: (q: string) => void;
 }) {
   const router = useRouter();
-  const { currentUser, usersList, switchUser, isAuthenticated, openLoginModal, logout } = useAuth();
+  const { currentUser, isAuthenticated, openLoginModal, logout } = useAuth();
   const { notifications, unreadCount, markRead, markAllRead } = useNotifications();
 
-  const [showPersonaMenu, setShowPersonaMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
-  const [showMobileProfile, setShowMobileProfile] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [searchValue, setSearchValue] = useState('');
 
-  const personaRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
-  const mobileProfileRef = useRef<HTMLDivElement>(null);
+  const userRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (personaRef.current && !personaRef.current.contains(event.target as Node)) {
-        setShowPersonaMenu(false);
-      }
       if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
         setShowNotifMenu(false);
       }
-      if (mobileProfileRef.current && !mobileProfileRef.current.contains(event.target as Node)) {
-        setShowMobileProfile(false);
+      if (userRef.current && !userRef.current.contains(event.target as Node)) {
+        setShowUserDropdown(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -91,86 +82,8 @@ export default function DashboardHeader({
         </form>
       </div>
 
-      {/* Right: Persona Switcher, Notifications & Foundry Pill CTAs */}
-      <div className="flex items-center justify-between md:justify-end gap-2 sm:gap-2.5 shrink-0">
-        {/* Persona quick-switch (for demo testing) */}
-        <div className="relative" ref={personaRef}>
-          <button
-            type="button"
-            onClick={() => setShowPersonaMenu(!showPersonaMenu)}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium border border-neutral-200 transition active:scale-95"
-            aria-label="Persona switcher"
-          >
-            <GraduationCap className="w-3.5 h-3.5 text-neutral-500" />
-            <span className="hidden md:inline text-neutral-400 text-[10px] uppercase tracking-wider">Persona:</span>
-            <strong className="text-foundry-900 text-xs font-semibold truncate max-w-[85px] sm:max-w-[100px]">
-              {currentUser?.name?.split(' ')[0] || 'Guest'}
-            </strong>
-            <ChevronDown className="w-3 h-3 text-neutral-400" />
-          </button>
-
-          {showPersonaMenu && (
-            <div className="absolute right-0 mt-2 w-72 bg-white text-foundry-900 rounded-xl shadow-2xl border border-neutral-200 py-2 z-50 animate-in fade-in zoom-in-95 duration-100">
-              <div className="px-3.5 py-1.5 text-[10px] font-semibold text-neutral-400 uppercase tracking-widest border-b border-neutral-100 mb-1 flex items-center justify-between">
-                <span>Campus Personas</span>
-                <span className="text-[9px] text-neutral-400 font-normal">Demo</span>
-              </div>
-
-              {usersList.map((u) => (
-                <button
-                  key={u.id}
-                  onClick={() => {
-                    switchUser(u.id);
-                    setShowPersonaMenu(false);
-                  }}
-                  className={`w-full text-left px-3.5 py-2 text-xs flex items-center justify-between hover:bg-neutral-50 transition ${
-                    u.id === currentUser?.id ? 'bg-neutral-100 font-semibold text-foundry-950' : 'text-neutral-700'
-                  }`}
-                >
-                  <div className="min-w-0 pr-2">
-                    <div className="font-semibold text-foundry-900 truncate">{u.name}</div>
-                    <div className="text-[10px] text-neutral-400 truncate">
-                      {u.role === 'MODERATOR' ? 'Campus Proctor / Curator' : u.email}
-                    </div>
-                  </div>
-                  {u.id === currentUser?.id && <Check className="w-4 h-4 text-foundry-900 shrink-0" />}
-                </button>
-              ))}
-
-              <div className="pt-1.5 mt-1.5 border-t border-neutral-100 px-2 space-y-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowPersonaMenu(false);
-                    openLoginModal();
-                  }}
-                  className="w-full text-left px-2.5 py-1.5 text-xs font-semibold text-foundry-900 hover:bg-neutral-100 rounded-lg flex items-center justify-between transition"
-                >
-                  <span className="flex items-center gap-2">
-                    <GoogleLogo />
-                    <span>Sign In with another Google account...</span>
-                  </span>
-                  <ArrowRight className="w-3.5 h-3.5 text-neutral-400" />
-                </button>
-
-                {isAuthenticated && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowPersonaMenu(false);
-                      logout();
-                    }}
-                    className="w-full text-left px-2.5 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-lg flex items-center gap-2 transition"
-                  >
-                    <LogOut className="w-3.5 h-3.5" />
-                    <span>Log Out</span>
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
+      {/* Right: Notifications, Auth Controls & Report Pill */}
+      <div className="flex items-center justify-between md:justify-end gap-2 sm:gap-3 shrink-0">
         {/* Notifications Bell */}
         <div className="relative" ref={notifRef}>
           <button
@@ -234,48 +147,60 @@ export default function DashboardHeader({
           )}
         </div>
 
-        {/* Action: Google Sign In or Profile */}
+        {/* User Authentication Status */}
         {isAuthenticated && currentUser ? (
-          <div className="relative" ref={mobileProfileRef}>
+          <div className="relative" ref={userRef}>
             <button
               type="button"
-              onClick={() => setShowMobileProfile(!showMobileProfile)}
-              className="flex items-center gap-1.5 pl-1.5 sm:pl-2 sm:border-l border-neutral-200 text-left active:scale-95"
+              onClick={() => setShowUserDropdown(!showUserDropdown)}
+              className="flex items-center gap-2 pl-2 sm:border-l border-neutral-200 text-left active:scale-95"
+              aria-label="User account menu"
             >
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-foundry-900 text-white font-semibold text-xs flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-full bg-foundry-900 text-white font-semibold text-xs flex items-center justify-center shrink-0 border border-neutral-700">
                 {currentUser.name ? currentUser.name[0].toUpperCase() : 'U'}
               </div>
               <div className="hidden sm:block text-right">
-                <div className="text-xs font-semibold text-foundry-900 max-w-[100px] truncate">{currentUser.name}</div>
-                <div className="text-[9px] text-neutral-400 uppercase tracking-wider font-mono">
-                  {currentUser.role === 'MODERATOR' ? 'Curator' : 'Student'}
+                <div className="text-xs font-semibold text-foundry-900 max-w-[120px] truncate">{currentUser.name}</div>
+                <div className="text-[9px] text-neutral-400 font-mono truncate max-w-[120px]">
+                  {currentUser.email}
                 </div>
               </div>
             </button>
 
-            {showMobileProfile && (
+            {showUserDropdown && (
               <div className="absolute right-0 mt-2 w-64 bg-white text-foundry-900 rounded-xl shadow-2xl border border-neutral-200 p-3.5 z-50 animate-in fade-in zoom-in-95 duration-100">
                 <div className="text-xs font-semibold text-foundry-900 truncate">{currentUser.name}</div>
                 <div className="text-[11px] text-neutral-400 font-mono truncate mt-0.5">{currentUser.email}</div>
+
                 <div className="mt-3 pt-2 border-t border-neutral-100 space-y-1.5">
+                  <Link
+                    href="/my-posts"
+                    onClick={() => setShowUserDropdown(false)}
+                    className="w-full text-left text-xs font-medium text-neutral-700 hover:text-foundry-900 py-1.5 px-2 rounded-lg hover:bg-neutral-50 flex items-center gap-2"
+                  >
+                    <FolderHeart className="w-3.5 h-3.5" />
+                    <span>My Dossier &amp; Claims</span>
+                  </Link>
+
                   <button
                     type="button"
                     onClick={() => {
-                      setShowMobileProfile(false);
-                      openLoginModal();
+                      setShowUserDropdown(false);
+                      openLoginModal('signin');
                     }}
-                    className="w-full text-left text-xs font-semibold text-neutral-700 hover:text-foundry-900 py-1 flex items-center justify-between"
+                    className="w-full text-left text-xs font-medium text-neutral-700 hover:text-foundry-900 py-1.5 px-2 rounded-lg hover:bg-neutral-50 flex items-center justify-between"
                   >
                     <span>Switch Google Account</span>
                     <GoogleLogo />
                   </button>
+
                   <button
                     type="button"
                     onClick={() => {
-                      setShowMobileProfile(false);
+                      setShowUserDropdown(false);
                       logout();
                     }}
-                    className="w-full text-left text-xs font-semibold text-rose-600 hover:text-rose-700 py-1 flex items-center gap-1.5"
+                    className="w-full text-left text-xs font-semibold text-rose-600 hover:text-rose-700 py-1.5 px-2 rounded-lg hover:bg-rose-50 flex items-center gap-2"
                   >
                     <LogOut className="w-3.5 h-3.5" />
                     <span>Log Out</span>
@@ -285,15 +210,24 @@ export default function DashboardHeader({
             )}
           </div>
         ) : (
-          <button
-            type="button"
-            onClick={openLoginModal}
-            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1.5 rounded-full bg-white hover:bg-neutral-50 border border-neutral-300 text-xs font-semibold text-foundry-900 shadow-2xs transition active:scale-95"
-            title="Sign in with your Google account"
-          >
-            <GoogleLogo />
-            <span className="text-[11px] uppercase tracking-wider font-semibold">Sign In</span>
-          </button>
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <button
+              type="button"
+              onClick={() => openLoginModal('signin')}
+              className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full bg-white hover:bg-neutral-50 border border-neutral-300 text-xs font-semibold text-foundry-900 shadow-2xs transition active:scale-95"
+            >
+              <GoogleLogo />
+              <span className="text-[11px] uppercase tracking-wider font-semibold">Sign In</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => openLoginModal('signup')}
+              className="hidden sm:inline-flex items-center px-3.5 py-1.5 rounded-full bg-neutral-100 hover:bg-neutral-200 text-foundry-900 text-[11px] font-semibold uppercase tracking-wider transition"
+            >
+              Sign Up
+            </button>
+          </div>
         )}
 
         {/* Report Button (Foundry pill style) */}

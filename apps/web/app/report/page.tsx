@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Upload, Lock, ShieldCheck, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Upload, Lock, ShieldCheck, AlertCircle, ArrowLeft, Image as ImageIcon, Check } from 'lucide-react';
 import { CATEGORIES, CAMPUS_ZONES, apiRequest } from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 import { GoogleLogo } from '../../components/GoogleSignInModal';
@@ -31,35 +31,75 @@ export default function ReportPage() {
   const [description, setDescription] = useState('');
   const [secretPrompt, setSecretPrompt] = useState('');
 
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
+  const [photoName, setPhotoName] = useState<string | null>(null);
+  const [isCompressing, setIsCompressing] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Client-side instant canvas compressor for phone cameras and high-res uploads
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!allowed.includes(file.type)) {
-      setError('OWASP File Alert: Only .jpg, .png, and .webp images are allowed.');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setError('OWASP File Alert: Image file exceeds 5MB size limit.');
-      return;
-    }
-
     setError(null);
-    setPhotoFile(file);
-    setPreview(URL.createObjectURL(file));
+    setIsCompressing(true);
+    setPhotoName(file.name);
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          const maxDim = 1200; // Optimal high-res exhibition size
+          let width = img.width;
+          let height = img.height;
+
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            const compressed = canvas.toDataURL('image/jpeg', 0.82);
+            setPhotoDataUrl(compressed);
+          } else {
+            setPhotoDataUrl(event.target?.result as string);
+          }
+        } catch (err) {
+          setPhotoDataUrl(event.target?.result as string);
+        } finally {
+          setIsCompressing(false);
+        }
+      };
+      img.onerror = () => {
+        setIsCompressing(false);
+        setError('Could not process this image format. Please choose a JPEG, PNG, or WebP photo.');
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.onerror = () => {
+      setIsCompressing(false);
+      setError('Failed to read the selected photo.');
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isAuthenticated) {
-      openLoginModal();
+      openLoginModal('signin');
       return;
     }
     if (!title.trim() || title.trim().length < 3) {
@@ -81,31 +121,28 @@ export default function ReportPage() {
 
       const coords = ZONE_COORDINATES[zone] || ZONE_COORDINATES.library;
 
-      const formData = new FormData();
-      formData.append('type', type.toUpperCase());
-      formData.append('title', title.trim());
-      formData.append('category', category);
-      formData.append('location_zone', zone);
-      formData.append('location_campus_area', campusArea.trim());
-      formData.append('latitude', coords.lat.toString());
-      formData.append('longitude', coords.lng.toString());
-      formData.append('incident_date', new Date(incidentDate).toISOString());
-      formData.append('description', description.trim());
-      if (secretPrompt.trim()) {
-        formData.append('secret_verification_prompt', secretPrompt.trim());
-      }
-      if (photoFile) {
-        formData.append('photo', photoFile);
-      }
+      const payload = {
+        type: type.toUpperCase(),
+        title: title.trim(),
+        category,
+        location_zone: zone,
+        location_campus_area: campusArea.trim(),
+        latitude: coords.lat,
+        longitude: coords.lng,
+        incident_date: new Date(incidentDate).toISOString(),
+        description: description.trim(),
+        secret_verification_prompt: secretPrompt.trim() || undefined,
+        photoUrl: photoDataUrl || undefined,
+      };
 
       const res = await apiRequest('/items', {
         method: 'POST',
-        body: formData,
+        body: JSON.stringify(payload),
       });
 
       router.push(`/items/${res.item.id}`);
     } catch (err: any) {
-      setError(err.message || 'Failed to submit report');
+      setError(err.message || 'Failed to submit report. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -129,9 +166,9 @@ export default function ReportPage() {
               Campus Spatial Archive Index
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-serif font-normal">Archive a Possession</h1>
+          <h1 className="text-2xl sm:text-3xl font-serif font-normal">Catalog a Possession</h1>
           <p className="text-xs text-neutral-400 mt-1 font-light leading-relaxed">
-            Indexed into the PostGIS spatial matrix for explainable verification across campus.
+            Indexed into the PostGIS spatial matrix for explainable verification and recovery across campus.
           </p>
         </div>
 
@@ -142,14 +179,14 @@ export default function ReportPage() {
                 <GoogleLogo />
               </div>
               <div>
-                <strong className="text-foundry-900 block font-semibold text-xs">Sign in with campus Google account</strong>
-                <span className="text-neutral-500 text-[11px]">Your student identity verifies claims and enables private handovers.</span>
+                <strong className="text-foundry-900 block font-semibold text-xs">Sign in with your Google account</strong>
+                <span className="text-neutral-500 text-[11px]">Authenticate to record items and receive notifications when matches are found.</span>
               </div>
             </div>
             <button
               type="button"
-              onClick={openLoginModal}
-              className="foundry-pill-outline px-4 py-1.5 text-[10px]"
+              onClick={() => openLoginModal('signin')}
+              className="foundry-pill-primary px-4 py-1.5 text-[10px] shrink-0"
             >
               Sign In
             </button>
@@ -161,7 +198,7 @@ export default function ReportPage() {
             <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-start gap-2.5" role="alert">
               <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
               <div>
-                <strong className="font-semibold block uppercase tracking-wider text-[10px]">Validation Notice</strong>
+                <strong className="font-semibold block uppercase tracking-wider text-[10px]">Notice</strong>
                 <span>{error}</span>
               </div>
             </div>
@@ -228,7 +265,7 @@ export default function ReportPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. MacBook Pro 14&quot; in Dark Leather Sleeve"
-              className="w-full px-3.5 py-2.5 text-xs rounded-lg border border-neutral-200 focus:border-foundry-900 transition outline-none"
+              className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-lg border border-neutral-200 focus:border-foundry-900 transition outline-none"
             />
           </div>
 
@@ -242,7 +279,7 @@ export default function ReportPage() {
                 id="item-cat"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3 py-2 text-xs rounded-lg border border-neutral-200 focus:border-foundry-900 bg-white outline-none"
+                className="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-neutral-200 focus:border-foundry-900 bg-white outline-none"
               >
                 {CATEGORIES.map((c) => (
                   <option key={c.id} value={c.id}>{c.label}</option>
@@ -258,7 +295,7 @@ export default function ReportPage() {
                 id="item-zone"
                 value={zone}
                 onChange={(e) => setZone(e.target.value)}
-                className="w-full px-3 py-2 text-xs rounded-lg border border-neutral-200 focus:border-foundry-900 bg-white outline-none"
+                className="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-neutral-200 focus:border-foundry-900 bg-white outline-none"
               >
                 {CAMPUS_ZONES.map((z) => (
                   <option key={z.id} value={z.id}>{z.name}</option>
@@ -280,7 +317,7 @@ export default function ReportPage() {
                 value={campusArea}
                 onChange={(e) => setCampusArea(e.target.value)}
                 placeholder="e.g. 2nd Floor Study Cubicle 14"
-                className="w-full px-3 py-2 text-xs rounded-lg border border-neutral-200 focus:border-foundry-900 outline-none"
+                className="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-neutral-200 focus:border-foundry-900 outline-none"
               />
             </div>
 
@@ -294,7 +331,7 @@ export default function ReportPage() {
                 required
                 value={incidentDate}
                 onChange={(e) => setIncidentDate(e.target.value)}
-                className="w-full px-3 py-2 text-xs rounded-lg border border-neutral-200 focus:border-foundry-900 outline-none"
+                className="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-neutral-200 focus:border-foundry-900 outline-none"
               />
             </div>
           </div>
@@ -311,7 +348,7 @@ export default function ReportPage() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="e.g. Left on the study table. Space Grey finish with subtle edge mark."
-              className="w-full px-3.5 py-2.5 text-xs rounded-lg border border-neutral-200 focus:border-foundry-900 resize-none outline-none"
+              className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-lg border border-neutral-200 focus:border-foundry-900 resize-none outline-none"
             />
           </div>
 
@@ -336,46 +373,65 @@ export default function ReportPage() {
             />
           </div>
 
-          {/* 7. S3 Upload with Matting */}
+          {/* 7. Photo Upload (With Instant Client-Side Optimization) */}
           <div>
             <label htmlFor="item-photo" className="editorial-kicker text-foundry-900 block mb-1">
-              Item Exhibition Visual (OWASP Object Storage)
+              Item Exhibition Visual (Camera / Gallery)
             </label>
             <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-neutral-400 mb-2">
               <ShieldCheck className="w-3 h-3 text-khoj-orange" />
-              <span>Magic-byte binary inspection • Max 5MB (JPG, PNG, WebP)</span>
+              <span>Camera auto-optimized • Fast HD upload for mobile &amp; desktop</span>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center gap-4">
-              <label
-                htmlFor="item-photo"
-                className="w-full sm:w-auto cursor-pointer inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full border border-neutral-300 hover:border-foundry-900 text-xs font-semibold text-foundry-900 transition"
-              >
-                <Upload className="w-3.5 h-3.5" />
-                <span>{photoFile ? 'Replace Visual' : 'Upload Image'}</span>
-              </label>
-              <input
-                id="item-photo"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={handlePhotoChange}
-                className="sr-only"
-              />
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <label
+                  htmlFor="item-photo"
+                  className="cursor-pointer inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full border border-neutral-300 hover:border-foundry-900 text-xs font-semibold text-foundry-900 transition active:scale-95 bg-white shadow-2xs"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>{photoDataUrl ? 'Change Visual' : 'Take Photo or Choose File'}</span>
+                </label>
+                <input
+                  id="item-photo"
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoChange}
+                  className="sr-only"
+                />
 
-              {preview && (
-                <div className="flex items-center gap-3 foundry-matting p-2 rounded-lg">
-                  <img src={preview} alt="Upload preview" className="w-12 h-12 object-cover rounded border border-neutral-200" />
-                  <div>
-                    <span className="text-xs font-medium text-foundry-900 block truncate max-w-[200px]">{photoFile?.name}</span>
+                {isCompressing && (
+                  <span className="text-xs text-neutral-500 animate-pulse flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-khoj-orange animate-ping"></span>
+                    Optimizing image...
+                  </span>
+                )}
+              </div>
+
+              {photoDataUrl && (
+                <div className="flex items-center gap-4 foundry-matting p-3 rounded-xl border border-neutral-200/80 max-w-md">
+                  <img
+                    src={photoDataUrl}
+                    alt="Upload preview"
+                    className="w-16 h-16 object-cover rounded-lg border border-neutral-200 shadow-xs"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <span className="text-xs font-semibold text-foundry-900 block truncate">
+                      {photoName || 'Captured Visual'}
+                    </span>
+                    <span className="text-[10px] text-emerald-700 flex items-center gap-1 mt-0.5 font-medium">
+                      <Check className="w-3 h-3" />
+                      Ready for exhibition
+                    </span>
                     <button
                       type="button"
                       onClick={() => {
-                        setPhotoFile(null);
-                        setPreview(null);
+                        setPhotoDataUrl(null);
+                        setPhotoName(null);
                       }}
-                      className="text-[10px] uppercase tracking-wider text-rose-600 hover:underline"
+                      className="text-[10px] uppercase tracking-wider text-rose-600 hover:underline mt-1"
                     >
-                      Remove
+                      Remove Photo
                     </button>
                   </div>
                 </div>
@@ -389,10 +445,10 @@ export default function ReportPage() {
             </Link>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isCompressing}
               className="foundry-pill-primary px-6 py-2.5 disabled:opacity-50"
             >
-              {isSubmitting ? 'Indexing...' : 'Publish to Archive'}
+              {isSubmitting ? 'Publishing...' : 'Publish to Catalog'}
             </button>
           </div>
         </form>

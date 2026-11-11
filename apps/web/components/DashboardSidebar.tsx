@@ -165,7 +165,7 @@ export default function DashboardSidebar() {
         ) : (
           <button
             type="button"
-            onClick={openLoginModal}
+            onClick={() => openLoginModal('signin')}
             className="h-10 px-3 rounded-full bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 flex items-center gap-2 text-white text-xs font-semibold transition active:scale-95"
             title="Sign in with Google"
           >

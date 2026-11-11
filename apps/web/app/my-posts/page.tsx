@@ -58,7 +58,7 @@ export default function MyPostsPage() {
         </p>
         <button
           type="button"
-          onClick={openLoginModal}
+          onClick={() => openLoginModal('signin')}
           className="mt-2 py-3 px-6 rounded-2xl text-xs font-bold text-slate-800 bg-white hover:bg-slate-50 border border-slate-300 shadow-md inline-flex items-center gap-2.5 transition active:scale-98"
         >
           <GoogleLogo />

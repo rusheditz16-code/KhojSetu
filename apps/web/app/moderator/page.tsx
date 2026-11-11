@@ -7,7 +7,7 @@ import { apiRequest, formatTimeAgo } from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 
 export default function ModeratorPage() {
-  const { isModerator, currentUser, usersList, switchUser } = useAuth();
+  const { isModerator, currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState<'flagged' | 'items' | 'audit'>('flagged');
 
   const [stats, setStats] = useState<any | null>(null);
@@ -96,19 +96,15 @@ export default function ModeratorPage() {
         </div>
         <h2 className="text-lg font-bold text-slate-800">Campus Proctor Access Required</h2>
         <p className="text-xs text-slate-500">
-          This area is restricted to campus moderators and proctors. Use the quick switcher below or the persona switcher in the top banner.
+          This command center is restricted to authorized campus proctors and staff members.
         </p>
-        <button
-          type="button"
-          onClick={() => {
-            const proctor = usersList.find((u) => u.role === 'MODERATOR');
-            if (proctor) switchUser(proctor.id);
-          }}
+        <Link
+          href="/login"
           className="mt-2 py-2.5 px-5 rounded-xl text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 shadow-md transition inline-flex items-center gap-2"
         >
           <ShieldAlert className="w-4 h-4 text-amber-400" />
-          <span>Switch to Campus Proctor (Prof. Vikram Sen)</span>
-        </button>
+          <span>Sign In as Campus Proctor</span>
+        </Link>
       </div>
     );
   }

@@ -32,6 +32,7 @@ import StatsCard from '../components/StatsCard';
 import CalendarWidget from '../components/CalendarWidget';
 import SavedForLaterView from '../components/SavedForLaterView';
 import ProfileFocusView from '../components/ProfileFocusView';
+import { GoogleLogo } from '../components/GoogleSignInModal';
 import { apiRequest, formatTimeAgo, getCategoryLabel } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -184,6 +185,47 @@ export default function DashboardPage() {
       {/* VIEW 1: OVERVIEW (Foundry Editorial Architecture) */}
       {activeTab === 'overview' && (
         <div className="space-y-6">
+          {/* Starting Guest Onboarding Gateway */}
+          {!isAuthenticated && (
+            <div className="p-6 sm:p-8 rounded-2xl bg-foundry-900 text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-foundry-frame">
+              <div className="space-y-2 max-w-xl">
+                <div className="inline-flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-khoj-orange animate-pulse"></span>
+                  <span className="editorial-kicker text-neutral-400">
+                    Official Campus Lost &amp; Found Gateway
+                  </span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-serif font-normal">
+                  Sign in with your Google account to get started
+                </h2>
+                <p className="text-xs text-neutral-400 font-light leading-relaxed">
+                  Verify campus possessions, submit reports, and receive AI-driven spatial radar matches directly in your private dossier.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3 shrink-0 w-full md:w-auto">
+                <button
+                  type="button"
+                  onClick={() => openLoginModal('signin')}
+                  className="flex-1 md:flex-initial foundry-pill-orange px-6 py-2.5 flex items-center justify-center gap-2 shadow-sm text-xs"
+                >
+                  <div className="w-4 h-4 rounded-full bg-white flex items-center justify-center shrink-0">
+                    <GoogleLogo />
+                  </div>
+                  <span>Sign In with Google</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => openLoginModal('signup')}
+                  className="flex-1 md:flex-initial px-5 py-2.5 rounded-full border border-neutral-700 hover:border-white text-white text-xs uppercase tracking-wider font-semibold transition"
+                >
+                  Create Account
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Split 50/50 Editorial Hero */}
           <DashboardHero
             onExploreMatches={() => {
